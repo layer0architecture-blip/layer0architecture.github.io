@@ -33,24 +33,39 @@
 </main>
 <script>
     const settings = window.SUPABASE_CONFIG;
+    const loginPanel = document.getElementById('loginPanel');
+    const dashboard = document.getElementById('dashboard');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const projectTitleInput = document.getElementById('projectTitle');
+    const projectImagesInput = document.getElementById('projectImages');
+    const memberNameInput = document.getElementById('memberName');
+    const memberRoleInput = document.getElementById('memberRole');
     const status = document.getElementById('status');
     const setStatus = message => { status.textContent = message; };
     const isConfigured = settings && settings.url && !settings.url.includes('TU-PROYECTO') && settings.anonKey && !settings.anonKey.includes('TU-CLAVE');
     const client = isConfigured ? supabase.createClient(settings.url, settings.anonKey) : null;
     if (!isConfigured) setStatus('Configura supabase-config.js con la URL y la clave pública de tu proyecto.');
+    const showDashboard = () => { loginPanel.classList.add('hidden'); dashboard.classList.remove('hidden'); };
+    const explainAuthError = error => {
+        if (error.message.includes('Invalid login credentials')) return 'Correo o contraseña incorrectos. Verifica que el usuario exista en Supabase > Authentication > Users.';
+        if (error.message.toLowerCase().includes('email not confirmed')) return 'Confirma el correo de Supabase antes de iniciar sesión o activa Auto Confirm User.';
+        return error.message;
+    };
+    if (client) client.auth.getSession().then(({ data }) => { if (data.session) showDashboard(); });
     document.getElementById('loginForm').addEventListener('submit', async event => {
         event.preventDefault(); if (!client) return setStatus('Falta configurar Supabase.'); setStatus('Iniciando sesión...');
-        const { error } = await client.auth.signInWithPassword({ email: email.value, password: password.value });
-        if (error) return setStatus(error.message);
-        loginPanel.classList.add('hidden'); dashboard.classList.remove('hidden'); setStatus('Sesión iniciada.');
+        const { error } = await client.auth.signInWithPassword({ email: emailInput.value.trim(), password: passwordInput.value });
+        if (error) return setStatus(explainAuthError(error));
+        showDashboard(); setStatus('Sesión iniciada.');
     });
     document.getElementById('projectForm').addEventListener('submit', async event => {
-        event.preventDefault(); const images = projectImages.value.split(',').map(item => item.trim()).filter(Boolean);
-        const { error } = await client.from('projects').insert({ title: projectTitle.value, images });
+        event.preventDefault(); const images = projectImagesInput.value.split(',').map(item => item.trim()).filter(Boolean);
+        const { error } = await client.from('projects').insert({ title: projectTitleInput.value, images });
         setStatus(error ? error.message : 'Proyecto guardado correctamente.'); if (!error) event.target.reset();
     });
     document.getElementById('memberForm').addEventListener('submit', async event => {
-        event.preventDefault(); const { error } = await client.from('members').insert({ name: memberName.value, role: memberRole.value });
+        event.preventDefault(); const { error } = await client.from('members').insert({ name: memberNameInput.value, role: memberRoleInput.value });
         setStatus(error ? error.message : 'Miembro guardado correctamente.'); if (!error) event.target.reset();
     });
     document.getElementById('logout').addEventListener('click', async () => { await client.auth.signOut(); dashboard.classList.add('hidden'); loginPanel.classList.remove('hidden'); setStatus('Sesión cerrada.'); });
