@@ -6,14 +6,17 @@
     <title>LAYER 0 | Arquitectura y Construcción</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <style>
         :root {
-            --bg-color: #0b0b0b;
-            --panel-bg: #121212;
-            --text-main: #e0e0e0;
-            --text-muted: #888888;
-            --border-color: #222222;
-            --accent: #ffffff;
+            --bg-color: #101212;
+            --panel-bg: #171b1b;
+            --text-main: #edf0eb;
+            --text-muted: #98a09b;
+            --border-color: #2b3230;
+            --accent: #d5ad70;
+            --accent-soft: #ead8bb;
         }
 
         * {
@@ -24,7 +27,7 @@
         }
 
         body {
-            background-color: var(--bg-color);
+            background: radial-gradient(circle at 80% 10%, #27302c 0, transparent 35%), var(--bg-color);
             color: var(--text-main);
             display: flex;
             min-height: 100vh;
@@ -66,6 +69,7 @@
             justify-content: center;
             cursor: pointer;
             border-radius: 0 4px 4px 0;
+            z-index: 3;
         }
 
         .brand-container {
@@ -178,6 +182,96 @@
             padding-bottom: 1rem;
         }
 
+        .eyebrow {
+            color: var(--accent);
+            font-size: 0.72rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 1.3rem;
+        }
+
+        .intro {
+            max-width: 720px;
+            margin-bottom: 3.5rem;
+        }
+
+        .intro h1 {
+            color: var(--accent-soft);
+            font-size: clamp(2.8rem, 7vw, 6.8rem);
+            font-weight: 300;
+            line-height: 0.95;
+            letter-spacing: -1px;
+            margin-bottom: 1.5rem;
+        }
+
+        .intro p, .about-copy {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.8;
+            max-width: 580px;
+        }
+
+        .text-link, .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin-top: 2rem;
+            padding: 0.85rem 1.15rem;
+            border: 1px solid var(--accent);
+            color: var(--accent-soft);
+            background: transparent;
+            text-decoration: none;
+            cursor: pointer;
+            font: inherit;
+            letter-spacing: 1px;
+            transition: background 0.25s, color 0.25s;
+        }
+
+        .text-link:hover, .action-btn:hover {
+            background: var(--accent);
+            color: #141817;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-heading .section-title { margin: 0; flex: 1; }
+        .section-heading .action-btn { margin: 0; font-size: 0.78rem; }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(8, 10, 10, 0.78);
+            z-index: 2000;
+        }
+
+        .modal-backdrop.open { display: flex; }
+        .modal {
+            width: min(100%, 480px);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-header h2 { font-size: 1.2rem; font-weight: 500; }
+        .close-modal { border: 0; background: transparent; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; }
+        .modal form { display: grid; gap: 1rem; }
+        .modal label { color: var(--text-muted); font-size: 0.78rem; letter-spacing: 1px; }
+        .modal input { width: 100%; margin-top: 0.4rem; padding: 0.8rem; border: 1px solid var(--border-color); background: #101313; color: var(--text-main); font: inherit; }
+        .modal .action-btn { justify-content: center; width: 100%; margin-top: 0.5rem; }
+        .gallery-modal { width: min(100%, 900px); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
+        .gallery-grid img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+
         /* SECCIÓN PROYECTOS */
         .projects-grid {
             display: grid;
@@ -286,6 +380,11 @@
             max-width: 500px;
         }
 
+        .contact-note { color: var(--text-muted); line-height: 1.7; margin-bottom: 0.5rem; }
+        .social-links { display: flex; gap: 0.8rem; margin-top: 2.5rem; }
+        .social-links a { color: var(--text-muted); font-size: 1.15rem; padding: 0.6rem; border: 1px solid var(--border-color); transition: color 0.25s, border-color 0.25s; }
+        .social-links a:hover { color: var(--accent); border-color: var(--accent); }
+
         .contact-btn {
             display: flex;
             align-items: center;
@@ -345,7 +444,11 @@
         </div>
 
         <nav class="menu">
-            <a href="#" onclick="switchTab('proyectos', event)" class="active">
+            <a href="#inicio" onclick="switchTab('inicio', event)" class="active">
+                <i class="fa-solid fa-house"></i>
+                <span class="nav-text">Inicio</span>
+            </a>
+            <a href="#" onclick="switchTab('proyectos', event)">
                 <i class="fa-solid fa-layer-group"></i>
                 <span class="nav-text">Proyectos</span>
             </a>
@@ -366,26 +469,38 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <main>
+        <!-- INICIO -->
+        <section id="inicio" class="active">
+            <div class="intro">
+                <div class="eyebrow">Arquitectura · Materia · Espacio</div>
+                <h1>Diseñamos lo que permanece.</h1>
+                <p>En LAYER 0 imaginamos espacios honestos, funcionales y sensibles a su contexto. Cada proyecto comienza con una pregunta y termina convirtiéndose en una experiencia.</p>
+                <a href="#proyectos" class="text-link" onclick="switchTab('proyectos', event)">Explorar proyectos <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </section>
+
         <!-- PROYECTOS -->
-        <section id="proyectos" class="active">
-            <h1 class="section-title">Proyectos</h1>
+        <section id="proyectos">
+            <div class="section-heading">
+                <h1 class="section-title">Proyectos</h1>
+            </div>
             <div class="projects-grid">
                 <!-- Proyecto 1 -->
-                <div class="project-card" onclick="window.location.href='proyecto1.html'">
+                <div class="project-card" data-title="Residencia Horizon" data-images="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85,https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85" onclick="openProjectGallery(this)">
                     <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Obra Residencial">
                     <div class="project-overlay">
                         <h3>Residencia Horizon</h3>
                     </div>
                 </div>
                 <!-- Proyecto 2 -->
-                <div class="project-card" onclick="window.location.href='proyecto2.html'">
+                <div class="project-card" data-title="Pabellón Monolito" data-images="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85,https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=85" onclick="openProjectGallery(this)">
                     <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80" alt="Espacio Comercial">
                     <div class="project-overlay">
                         <h3>Pabellón Monolito</h3>
                     </div>
                 </div>
                 <!-- Proyecto 3 -->
-                <div class="project-card" onclick="window.location.href='proyecto3.html'">
+                <div class="project-card" data-title="Torre Eje" data-images="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85,https://images.unsplash.com/photo-1600566753051-9c1c8b5f5d1c?auto=format&fit=crop&w=1200&q=85" onclick="openProjectGallery(this)">
                     <img src="https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=800&q=80" alt="Diseño Interior">
                     <div class="project-overlay">
                         <h3>Torre Eje</h3>
@@ -396,7 +511,10 @@
 
         <!-- NOSOTROS (5 MIEMBROS) -->
         <section id="nosotros">
-            <h1 class="section-title">Nosotros</h1>
+            <div class="section-heading">
+                <h1 class="section-title">Nosotros</h1>
+            </div>
+            <p class="about-copy">Somos un equipo multidisciplinario que trabaja entre la arquitectura, el diseño y la construcción. Nos interesa crear lugares que envejezcan bien y mejoren la vida cotidiana.</p>
             <div class="team-grid">
                 <div class="team-member">
                     <div class="member-avatar"><i class="fa-solid fa-user"></i></div>
@@ -429,6 +547,7 @@
         <!-- CONTACTO -->
         <section id="contacto">
             <h1 class="section-title">Contacto</h1>
+            <p class="contact-note">Cuéntanos sobre tu próximo espacio. Estamos disponibles para conversar sobre proyectos, colaboraciones y nuevas ideas.</p>
             <div class="contact-container">
                 <a href="https://instagram.com/layer0_s" target="_blank" class="contact-btn">
                     <i class="fa-brands fa-instagram"></i>
@@ -451,8 +570,20 @@
                     <span>+52 123 456 7890</span>
                 </a>
             </div>
+            <div class="social-links" aria-label="Redes sociales">
+                <a href="https://instagram.com/layer0_s" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>
         </section>
     </main>
+
+    <div class="modal-backdrop" id="galleryModal" role="dialog" aria-modal="true" aria-labelledby="galleryTitle">
+        <div class="modal gallery-modal">
+            <div class="modal-header"><h2 id="galleryTitle">Proyecto</h2><button class="close-modal" type="button" onclick="closeModal('galleryModal')" aria-label="Cerrar">&times;</button></div>
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+    </div>
 
     <script>
         const sidebar = document.getElementById('sidebar');
@@ -492,6 +623,108 @@
                 sidebar.classList.remove('mobile-open');
             }
         }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('open');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('open');
+        }
+
+        function openProjectGallery(card) {
+            document.getElementById('galleryTitle').textContent = card.dataset.title;
+            const gallery = document.getElementById('galleryGrid');
+            gallery.replaceChildren();
+            card.dataset.images.split(',').map(image => image.trim()).filter(Boolean).forEach((image, index) => {
+                const imageElement = document.createElement('img');
+                imageElement.src = image;
+                imageElement.alt = `${card.dataset.title}, imagen ${index + 1}`;
+                gallery.appendChild(imageElement);
+            });
+            openModal('galleryModal');
+        }
+
+        function saveData() {
+            localStorage.setItem('layer0Projects', JSON.stringify([...document.querySelectorAll('.project-card')].map(card => ({
+                title: card.dataset.title,
+                images: card.dataset.images
+            }))));
+            localStorage.setItem('layer0Members', JSON.stringify([...document.querySelectorAll('.team-member')].map(member => ({
+                name: member.querySelector('h3').textContent,
+                role: member.querySelector('p').textContent
+            }))));
+        }
+
+        async function renderSavedData() {
+            const settings = window.SUPABASE_CONFIG;
+            if (settings && settings.url && !settings.url.includes('TU-PROYECTO') && window.supabase) {
+                const client = window.supabase.createClient(settings.url, settings.anonKey);
+                const [{ data: projects }, { data: members }] = await Promise.all([
+                    client.from('projects').select('title, images').order('created_at'),
+                    client.from('members').select('name, role').order('created_at')
+                ]);
+                if (projects) {
+                    document.querySelector('.projects-grid').replaceChildren();
+                    projects.forEach(project => createProjectCard(project.title, project.images.join(',')));
+                }
+                if (members) {
+                    document.querySelector('.team-grid').replaceChildren();
+                    members.forEach(member => createMemberCard(member.name, member.role));
+                }
+                return;
+            }
+            const projects = JSON.parse(localStorage.getItem('layer0Projects') || '[]');
+            const members = JSON.parse(localStorage.getItem('layer0Members') || '[]');
+            if (projects.length) {
+                const projectGrid = document.querySelector('.projects-grid');
+                projectGrid.replaceChildren();
+                projects.forEach(project => createProjectCard(project.title, project.images));
+            }
+            if (members.length) {
+                const memberGrid = document.querySelector('.team-grid');
+                memberGrid.replaceChildren();
+                members.forEach(member => createMemberCard(member.name, member.role));
+            }
+        }
+
+        function createProjectCard(name, images) {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            card.dataset.title = name;
+            card.dataset.images = images;
+            card.addEventListener('click', () => openProjectGallery(card));
+            const image = document.createElement('img');
+            image.src = images.split(',')[0].trim();
+            image.alt = name;
+            const overlay = document.createElement('div');
+            overlay.className = 'project-overlay';
+            const title = document.createElement('h3');
+            title.textContent = name;
+            overlay.appendChild(title);
+            card.append(image, overlay);
+            document.querySelector('.projects-grid').appendChild(card);
+        }
+
+        function createMemberCard(name, role) {
+            const member = document.createElement('div');
+            member.className = 'team-member';
+            member.innerHTML = '<div class="member-avatar"><i class="fa-solid fa-user"></i></div>';
+            const title = document.createElement('h3');
+            title.textContent = name;
+            const description = document.createElement('p');
+            description.textContent = role;
+            member.append(title, description);
+            document.querySelector('.team-grid').appendChild(member);
+        }
+
+        document.querySelectorAll('.modal-backdrop').forEach(modal => {
+            modal.addEventListener('click', event => {
+                if (event.target === modal) modal.classList.remove('open');
+            });
+        });
+
+        renderSavedData();
     </script>
 </body>
 </html>
