@@ -1,4 +1,4 @@
 window.SUPABASE_CONFIG = {
-    url: 'https://TU-PROYECTO.supabase.co',
-    anonKey: 'TU-CLAVE-ANON-PUBLICA'
+    url: 'https://btbfcbttcuayydywsokx.supabase.co',
+    anonKey: 'sb_publishable_5uY9dgxrlkol7CkWL00z2g_KqPuEZ10'
 };
