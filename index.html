@@ -359,6 +359,8 @@
             border: 1px solid var(--border-color);
         }
 
+        .member-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
         .team-member h3 {
             font-size: 1rem;
             font-weight: 500;
@@ -371,6 +373,8 @@
             color: var(--text-muted);
             letter-spacing: 0.5px;
         }
+
+        .member-description { margin-top: 1rem; line-height: 1.6; }
 
         /* SECCIÓN CONTACTO */
         .contact-container {
@@ -571,9 +575,10 @@
                 </a>
             </div>
             <div class="social-links" aria-label="Redes sociales">
-                <a href="https://instagram.com/layer0_s" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                <a data-social="instagram" href="https://instagram.com/layer0_s" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a data-social="facebook" href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a data-social="linkedin" href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                <a data-social="tiktok" href="https://tiktok.com" target="_blank" rel="noreferrer" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
             </div>
         </section>
     </main>
@@ -660,9 +665,10 @@
             const settings = window.SUPABASE_CONFIG;
             if (settings && settings.url && !settings.url.includes('TU-PROYECTO') && window.supabase) {
                 const client = window.supabase.createClient(settings.url, settings.anonKey);
-                const [{ data: projects }, { data: members }] = await Promise.all([
+                const [{ data: projects }, { data: members }, { data: social }] = await Promise.all([
                     client.from('projects').select('title, images').order('created_at'),
-                    client.from('members').select('name, role').order('created_at')
+                    client.from('members').select('name, role, description, photo').order('created_at'),
+                    client.from('social_links').select('platform, url')
                 ]);
                 if (projects) {
                     document.querySelector('.projects-grid').replaceChildren();
@@ -670,8 +676,9 @@
                 }
                 if (members) {
                     document.querySelector('.team-grid').replaceChildren();
-                    members.forEach(member => createMemberCard(member.name, member.role));
+                    members.forEach(member => createMemberCard(member.name, member.role, member.description, member.photo));
                 }
+                (social || []).forEach(link => { const anchor = document.querySelector(`[data-social="${link.platform}"]`); if (anchor && link.url) anchor.href = link.url; });
                 return;
             }
             const projects = JSON.parse(localStorage.getItem('layer0Projects') || '[]');
@@ -684,7 +691,7 @@
             if (members.length) {
                 const memberGrid = document.querySelector('.team-grid');
                 memberGrid.replaceChildren();
-                members.forEach(member => createMemberCard(member.name, member.role));
+                members.forEach(member => createMemberCard(member.name, member.role, member.description, member.photo));
             }
         }
 
@@ -706,15 +713,27 @@
             document.querySelector('.projects-grid').appendChild(card);
         }
 
-        function createMemberCard(name, role) {
+        function createMemberCard(name, role, biographyText = '', photo = '') {
             const member = document.createElement('div');
             member.className = 'team-member';
-            member.innerHTML = '<div class="member-avatar"><i class="fa-solid fa-user"></i></div>';
+            const avatar = document.createElement('div');
+            avatar.className = 'member-avatar';
+            if (photo) {
+                const image = document.createElement('img');
+                image.src = photo;
+                image.alt = `Fotografía de ${name}`;
+                avatar.appendChild(image);
+            } else {
+                avatar.innerHTML = '<i class="fa-solid fa-user"></i>';
+            }
             const title = document.createElement('h3');
             title.textContent = name;
-            const description = document.createElement('p');
-            description.textContent = role;
-            member.append(title, description);
+            const roleLabel = document.createElement('p');
+            roleLabel.textContent = role;
+            const biography = document.createElement('p');
+            biography.className = 'member-description';
+            biography.textContent = biographyText || '';
+            member.append(avatar, title, roleLabel, biography);
             document.querySelector('.team-grid').appendChild(member);
         }
 
