@@ -66,13 +66,13 @@
     const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
     const loadRecords = async () => {
         const [{ data: projects }, { data: members }, { data: social }] = await Promise.all([
-            client.from('projects').select('id, title, images, location, description, project_date').order('created_at', { ascending: false }),
+            client.from('projects').select('id, title, images, location, description, project_date, is_example').order('created_at', { ascending: false }),
             client.from('members').select('id, name, role, profession, description, photo').order('created_at', { ascending: false }),
             client.from('social_links').select('platform, url')
         ]);
         projectsCache = projects || [];
         membersCache = members || [];
-        document.getElementById('projectRecords').innerHTML = projectsCache.map(project => `<div class="record"><span>${escapeHtml(project.title)}<small>${escapeHtml(project.location)} · ${project.images.length} imagen(es)</small></span><span><button type="button" onclick="editProject(${project.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('projects', ${project.id}, 'Proyecto eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay proyectos guardados.</small>';
+        document.getElementById('projectRecords').innerHTML = projectsCache.map(project => `<div class="record"><span>${escapeHtml(project.title)}<small>${escapeHtml(project.location)} · ${project.images.length} imagen(es)${project.is_example ? ' · ejemplo' : ''}</small></span><span><button type="button" onclick="editProject(${project.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('projects', ${project.id}, 'Proyecto eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay proyectos guardados.</small>';
         document.getElementById('memberRecords').innerHTML = membersCache.map(member => `<div class="record"><span>${escapeHtml(member.name)}<small>${escapeHtml(member.profession || member.role)}</small></span><span><button type="button" onclick="editMember(${member.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('members', ${member.id}, 'Miembro eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay miembros guardados.</small>';
         (social || []).forEach(link => { const input = document.getElementById(`${link.platform}Url`); if (input) input.value = link.url; });
         const whatsappFields = document.getElementById('whatsappFields');
