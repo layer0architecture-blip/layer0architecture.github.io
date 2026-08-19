@@ -25,7 +25,7 @@
         <form id="loginForm"><label>Correo<input id="email" type="email" required autocomplete="email"></label><label>Contraseña<input id="password" type="password" required autocomplete="current-password"></label><button>Entrar</button></form>
     </section>
     <section class="hidden" id="dashboard">
-        <div class="panel"><h2>Nuevo proyecto</h2><form id="projectForm"><label>Nombre<input id="projectTitle" required></label><label>URLs de imágenes, separadas por comas<input id="projectImages" placeholder="https://..." required></label><button>Guardar proyecto</button></form></div>
+        <div class="panel"><h2>Nuevo proyecto</h2><form id="projectForm"><label>Nombre<input id="projectTitle" required></label><div class="row"><label>Ubicación<input id="projectLocation" placeholder="Ciudad, país"></label><label>Fecha<input id="projectDate" type="date"></label></div><label>Descripción<textarea id="projectDescription" placeholder="Concepto, materiales y alcance del proyecto"></textarea></label><label>URLs de imágenes, separadas por comas<input id="projectImages" placeholder="https://..." required></label><button>Guardar proyecto</button></form></div>
         <div class="panel"><h2>Nuevo miembro</h2><form id="memberForm"><div class="row"><label>Nombre<input id="memberName" required></label><label>Rol<input id="memberRole" required></label></div><label>Descripción<textarea id="memberDescription" placeholder="Especialidad, experiencia o presentación"></textarea></label><label>Fotografía (URL)<input id="memberPhoto" type="url" placeholder="https://..."></label><button>Guardar miembro</button></form><div class="records" id="memberRecords"></div></div>
         <div class="panel"><h2>Redes sociales</h2><form id="socialForm"><div class="row"><label>Instagram<input id="instagramUrl" type="url" placeholder="https://instagram.com/..."></label><label>Facebook<input id="facebookUrl" type="url" placeholder="https://facebook.com/..."></label></div><div class="row"><label>LinkedIn<input id="linkedinUrl" type="url" placeholder="https://linkedin.com/in/..."></label><label>TikTok<input id="tiktokUrl" type="url" placeholder="https://tiktok.com/@..."></label></div><button>Guardar enlaces sociales</button></form></div>
         <div class="panel"><h2>Proyectos publicados</h2><div class="records" id="projectRecords"></div></div>
@@ -41,6 +41,9 @@
     const passwordInput = document.getElementById('password');
     const projectTitleInput = document.getElementById('projectTitle');
     const projectImagesInput = document.getElementById('projectImages');
+    const projectLocationInput = document.getElementById('projectLocation');
+    const projectDescriptionInput = document.getElementById('projectDescription');
+    const projectDateInput = document.getElementById('projectDate');
     const memberNameInput = document.getElementById('memberName');
     const memberRoleInput = document.getElementById('memberRole');
     const memberDescriptionInput = document.getElementById('memberDescription');
@@ -54,11 +57,11 @@
     const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
     const loadRecords = async () => {
         const [{ data: projects }, { data: members }, { data: social }] = await Promise.all([
-            client.from('projects').select('id, title, images').order('created_at', { ascending: false }),
+            client.from('projects').select('id, title, images, location, description, project_date').order('created_at', { ascending: false }),
             client.from('members').select('id, name, role').order('created_at', { ascending: false }),
             client.from('social_links').select('platform, url')
         ]);
-        document.getElementById('projectRecords').innerHTML = (projects || []).map(project => `<div class="record"><span>${escapeHtml(project.title)}<small>${project.images.length} imagen(es)</small></span><button class="danger" type="button" onclick="deleteRecord('projects', ${project.id}, 'Proyecto eliminado.')">Eliminar</button></div>`).join('') || '<small>No hay proyectos guardados.</small>';
+        document.getElementById('projectRecords').innerHTML = (projects || []).map(project => `<div class="record"><span>${escapeHtml(project.title)}<small>${escapeHtml(project.location)} · ${project.images.length} imagen(es)</small></span><button class="danger" type="button" onclick="deleteRecord('projects', ${project.id}, 'Proyecto eliminado.')">Eliminar</button></div>`).join('') || '<small>No hay proyectos guardados.</small>';
         document.getElementById('memberRecords').innerHTML = (members || []).map(member => `<div class="record"><span>${escapeHtml(member.name)}<small>${escapeHtml(member.role)}</small></span><button class="danger" type="button" onclick="deleteRecord('members', ${member.id}, 'Miembro eliminado.')">Eliminar</button></div>`).join('') || '<small>No hay miembros guardados.</small>';
         (social || []).forEach(link => { const input = document.getElementById(`${link.platform}Url`); if (input) input.value = link.url; });
     };
@@ -81,7 +84,7 @@
     });
     document.getElementById('projectForm').addEventListener('submit', async event => {
         event.preventDefault(); const images = projectImagesInput.value.split(',').map(item => item.trim()).filter(Boolean);
-        const { error } = await client.from('projects').insert({ title: projectTitleInput.value, images });
+        const { error } = await client.from('projects').insert({ title: projectTitleInput.value, images, location: projectLocationInput.value, description: projectDescriptionInput.value, project_date: projectDateInput.value || null });
         setStatus(error ? error.message : 'Proyecto guardado correctamente.'); if (!error) { event.target.reset(); loadRecords(); }
     });
     document.getElementById('memberForm').addEventListener('submit', async event => {
