@@ -10,7 +10,7 @@
     <script src="supabase-config.js"></script>
     <style>
         :root {
-            --bg-color: #101212;
+            --bg-color: #000000;
             --panel-bg: #171b1b;
             --text-main: #edf0eb;
             --text-muted: #98a09b;
@@ -27,7 +27,7 @@
         }
 
         body {
-            background: radial-gradient(circle at 80% 10%, #27302c 0, transparent 35%), var(--bg-color);
+            background: var(--bg-color);
             color: var(--text-main);
             display: flex;
             min-height: 100vh;
@@ -38,8 +38,8 @@
             content: '';
             position: fixed;
             top: 50%;
-            right: -22vw;
-            width: 72vw;
+            right: -36vw;
+            width: 78vw;
             height: 100vh;
             background: url('logo.jpg') center / contain no-repeat;
             opacity: 0.08;
