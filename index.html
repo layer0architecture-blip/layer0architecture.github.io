@@ -43,6 +43,8 @@
             height: 100vh;
             background: url('logo.jpg') center / contain no-repeat;
             opacity: 0.08;
+            filter: invert(1);
+            mix-blend-mode: screen;
             pointer-events: none;
             transform: translateY(-50%);
             z-index: 0;
@@ -98,6 +100,7 @@
             height: 149px;
             border-radius: 50%;
             object-fit: cover;
+            background-color: rgb(244, 241, 236);
             border: 0;
             margin-bottom: 1rem;
             transition: all 0.3s ease;
