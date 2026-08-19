@@ -214,6 +214,46 @@
             margin-bottom: 3.5rem;
         }
 
+        .home-services {
+            width: min(760px, 100%);
+            margin: 10vh auto 0;
+            text-align: center;
+        }
+
+        .home-services-title {
+            color: var(--accent-soft);
+            font-size: 1.8rem;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .service-item {
+            border-top: 1px solid var(--border-color);
+            padding: 1.2rem .8rem;
+        }
+
+        .service-item h3 {
+            color: var(--text-main);
+            font-size: .95rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .service-item p {
+            color: var(--text-muted);
+            font-size: .85rem;
+            line-height: 1.6;
+            margin-top: .6rem;
+        }
+
         .intro h1 {
             color: var(--accent-soft);
             font-size: clamp(2.8rem, 7vw, 6.8rem);
@@ -367,8 +407,9 @@
         }
 
         .member-avatar {
-            width: 90px;
-            height: 90px;
+            width: 157.5px;
+            height: 157.5px;
+            flex: 0 0 157.5px;
             border-radius: 50%;
             background-color: #222;
             margin: 0 auto 1.2rem auto;
@@ -397,6 +438,9 @@
 
         .member-description { margin-top: 1rem; line-height: 1.6; }
 
+        .member-instagram { display: inline-flex; margin-top: 1rem; color: var(--text-muted); font-size: 1rem; transition: color 0.25s; }
+        .member-instagram:hover { color: var(--accent); }
+
         /* SECCIÓN CONTACTO */
         .contact-container {
             display: flex;
@@ -406,10 +450,6 @@
         }
 
         .contact-note { color: var(--text-muted); line-height: 1.7; margin-bottom: 0.5rem; }
-        .social-links { display: flex; gap: 0.8rem; margin-top: 2.5rem; }
-        .social-links a { color: var(--text-muted); font-size: 1.15rem; padding: 0.6rem; border: 1px solid var(--border-color); transition: color 0.25s, border-color 0.25s; }
-        .social-links a:hover { color: var(--accent); border-color: var(--accent); }
-
         .contact-btn {
             display: flex;
             align-items: center;
@@ -497,10 +537,14 @@
         <!-- INICIO -->
         <section id="inicio" class="active">
             <div class="intro">
-                <div class="eyebrow">Arquitectura · Materia · Espacio</div>
-                <h1>Diseñamos lo que permanece.</h1>
-                <p>En LAYER 0 imaginamos espacios honestos, funcionales y sensibles a su contexto. Cada proyecto comienza con una pregunta y termina convirtiéndose en una experiencia.</p>
-                <a href="#proyectos" class="text-link" onclick="switchTab('proyectos', event)">Explorar proyectos <i class="fa-solid fa-arrow-right"></i></a>
+                <div class="eyebrow" id="homeEyebrow">Arquitectura · Materia · Espacio</div>
+                <h1 id="homeTitle">Diseñamos lo que permanece.</h1>
+                <p id="homeDescription">En LAYER 0 imaginamos espacios honestos, funcionales y sensibles a su contexto. Cada proyecto comienza con una pregunta y termina convirtiéndose en una experiencia.</p>
+                <a href="#proyectos" class="text-link" onclick="switchTab('proyectos', event)"><span id="homeCta">Explorar proyectos</span> <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="home-services">
+                <h2 class="home-services-title">Servicios</h2>
+                <div class="services-grid" id="servicesGrid"></div>
             </div>
         </section>
 
@@ -573,35 +617,7 @@
         <section id="contacto">
             <h1 class="section-title">Contacto</h1>
             <p class="contact-note">Cuéntanos sobre tu próximo espacio. Estamos disponibles para conversar sobre proyectos, colaboraciones y nuevas ideas.</p>
-            <div class="contact-container">
-                <a href="https://instagram.com/layer0_s" target="_blank" class="contact-btn">
-                    <i class="fa-brands fa-instagram"></i>
-                    <span>Instagram (@layer0_s)</span>
-                </a>
-                <a href="https://facebook.com" target="_blank" class="contact-btn">
-                    <i class="fa-brands fa-facebook-f"></i>
-                    <span>Facebook</span>
-                </a>
-                <a href="https://tiktok.com" target="_blank" class="contact-btn">
-                    <i class="fa-brands fa-tiktok"></i>
-                    <span>TikTok</span>
-                </a>
-                <a href="mailto:contacto@layer0.com" class="contact-btn">
-                    <i class="fa-solid fa-envelope"></i>
-                    <span>contacto@layer0.com</span>
-                </a>
-                <a href="tel:+521234567890" class="contact-btn">
-                    <i class="fa-solid fa-phone"></i>
-                    <span>+52 123 456 7890</span>
-                </a>
-                <div id="whatsappLinks"></div>
-            </div>
-            <div class="social-links" aria-label="Redes sociales">
-                <a data-social="instagram" href="https://instagram.com/layer0_s" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                <a data-social="facebook" href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                <a data-social="linkedin" href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                <a data-social="tiktok" href="https://tiktok.com" target="_blank" rel="noreferrer" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-            </div>
+            <div class="contact-container" id="contactLinks" aria-label="Medios de contacto"></div>
         </section>
     </main>
 
@@ -702,22 +718,41 @@
             const settings = window.SUPABASE_CONFIG;
             if (settings && settings.url && !settings.url.includes('TU-PROYECTO') && window.supabase) {
                 const client = window.supabase.createClient(settings.url, settings.anonKey);
-                const [{ data: projects }, { data: members }, { data: social }] = await Promise.all([
+                const [projectsResult, membersResult, socialResult, contentResult, servicesResult] = await Promise.all([
                     client.from('projects').select('title, images, location, description, project_date').order('created_at'),
-                    client.from('members').select('name, role, profession, description, photo').order('created_at'),
-                    client.from('social_links').select('platform, url')
+                    client.from('members').select('name, role, profession, description, photo, instagram').order('created_at'),
+                    client.from('social_links').select('platform, url'),
+                    client.from('site_content').select('content_key, content_value'),
+                    client.from('services').select('title, description').order('created_at')
                 ]);
+                const { data: projects } = projectsResult;
+                const { data: members } = membersResult;
+                const { data: social } = socialResult;
+                const { data: content } = contentResult;
+                const { data: services } = servicesResult;
+                    (content || []).forEach(item => {
+                        const element = document.getElementById(item.content_key);
+                        if (element && item.content_value) element.textContent = item.content_value;
+                    });
+                    if (services !== null) {
+                        document.getElementById('servicesGrid').replaceChildren();
+                        services.forEach(service => createServiceCard(service.title, service.description));
+                    }
                 if (projects) {
                     document.querySelector('.projects-grid').replaceChildren();
                     projects.forEach(project => createProjectCard(project.title, project.images.join(','), project.location, project.description, project.project_date));
                 }
                 if (members) {
                     document.querySelector('.team-grid').replaceChildren();
-                    members.forEach(member => createMemberCard(member.name, member.role, member.profession, member.description, member.photo));
+                    members.forEach(member => createMemberCard(member.name, member.role, member.profession, member.description, member.photo, member.instagram));
                 }
-                (social || []).forEach(link => { const anchor = document.querySelector(`[data-social="${link.platform}"]`); if (anchor && link.url) anchor.href = link.url; });
-                const whatsappLinks = document.getElementById('whatsappLinks');
-                (social || []).filter(link => link.platform.startsWith('whatsapp_') && link.url).forEach(link => { const contact = document.createElement('a'); contact.className = 'contact-btn'; contact.href = link.url; contact.target = '_blank'; contact.rel = 'noreferrer'; contact.innerHTML = '<i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span>'; whatsappLinks.appendChild(contact); });
+                renderContacts(social?.length ? social : [
+                    { platform: 'instagram', url: 'https://instagram.com/layer0_s' },
+                    { platform: 'facebook', url: 'https://facebook.com' },
+                    { platform: 'tiktok', url: 'https://tiktok.com' },
+                    { platform: 'email', url: 'contacto@layer0.com' },
+                    { platform: 'whatsapp_1', url: 'https://wa.me/521234567890' }
+                ]);
                 return;
             }
             const projects = JSON.parse(localStorage.getItem('layer0Projects') || '[]');
@@ -730,8 +765,42 @@
             if (members.length) {
                 const memberGrid = document.querySelector('.team-grid');
                 memberGrid.replaceChildren();
-                members.forEach(member => createMemberCard(member.name, member.role, member.profession || '', member.description || '', member.photo || ''));
+                members.forEach(member => createMemberCard(member.name, member.role, member.profession || '', member.description || '', member.photo || '', member.instagram || ''));
             }
+        }
+
+        function renderContacts(links) {
+            const contactLinks = document.getElementById('contactLinks');
+            contactLinks.replaceChildren();
+            const visibleLinks = links.filter(link => link.url && (['instagram', 'facebook', 'tiktok', 'email'].includes(link.platform) || link.platform.startsWith('whatsapp_')));
+            visibleLinks.forEach(link => {
+                const contact = document.createElement('a');
+                const isEmail = link.platform === 'email';
+                const isWhatsapp = link.platform.startsWith('whatsapp_');
+                const icon = { instagram: 'fa-brands fa-instagram', facebook: 'fa-brands fa-facebook-f', tiktok: 'fa-brands fa-tiktok', email: 'fa-solid fa-envelope' }[link.platform] || 'fa-brands fa-whatsapp';
+                contact.className = 'contact-btn';
+                contact.href = isEmail ? `mailto:${link.url}` : link.url;
+                if (!isEmail) { contact.target = '_blank'; contact.rel = 'noreferrer'; }
+                const handle = link.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '').split('/').pop();
+                const socialNames = { facebook: 'Layer0 Architecture Studio', tiktok: 'Layer.030' };
+                const label = socialNames[link.platform] || (isWhatsapp ? link.url.replace(/^.*\//, '') : isEmail ? link.url : `@${handle.replace(/^@/, '')}`);
+                contact.innerHTML = `<i class="${icon}"></i><span>${label}</span>`;
+                contactLinks.appendChild(contact);
+            });
+        }
+
+        function createServiceCard(title, description = '') {
+            const service = document.createElement('article');
+            service.className = 'service-item';
+            const serviceTitle = document.createElement('h3');
+            serviceTitle.textContent = title;
+            service.appendChild(serviceTitle);
+            if (description) {
+                const serviceDescription = document.createElement('p');
+                serviceDescription.textContent = description;
+                service.appendChild(serviceDescription);
+            }
+            document.getElementById('servicesGrid').appendChild(service);
         }
 
         function createProjectCard(name, images, location = '', description = '', projectDate = '') {
@@ -755,7 +824,7 @@
             document.querySelector('.projects-grid').appendChild(card);
         }
 
-        function createMemberCard(name, role, profession = '', biographyText = '', photo = '') {
+        function createMemberCard(name, role, profession = '', biographyText = '', photo = '', instagram = '') {
             const member = document.createElement('div');
             member.className = 'team-member';
             const avatar = document.createElement('div');
@@ -778,6 +847,16 @@
             biography.className = 'member-description';
             biography.textContent = biographyText || '';
             member.append(avatar, title, professionLabel, roleLabel, biography);
+            if (instagram) {
+                const instagramLink = document.createElement('a');
+                instagramLink.className = 'member-instagram';
+                instagramLink.href = instagram;
+                instagramLink.target = '_blank';
+                instagramLink.rel = 'noreferrer';
+                instagramLink.ariaLabel = `Instagram de ${name}`;
+                instagramLink.innerHTML = '<i class="fa-brands fa-instagram"></i>';
+                biography.insertAdjacentElement('afterend', instagramLink);
+            }
             document.querySelector('.team-grid').appendChild(member);
         }
 
@@ -787,6 +866,13 @@
             });
         });
 
+        renderContacts([
+            { platform: 'instagram', url: 'https://instagram.com/layer0_s' },
+            { platform: 'facebook', url: 'https://facebook.com' },
+            { platform: 'tiktok', url: 'https://tiktok.com' },
+            { platform: 'email', url: 'contacto@layer0.com' },
+            { platform: 'whatsapp_1', url: 'https://wa.me/521234567890' }
+        ]);
         renderSavedData();
     </script>
 </body>

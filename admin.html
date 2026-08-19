@@ -26,8 +26,10 @@
     </section>
     <section class="hidden" id="dashboard">
         <div class="panel"><h2 id="projectFormTitle">Nuevo proyecto</h2><form id="projectForm"><input id="projectId" type="hidden"><label>Nombre<input id="projectTitle" required></label><div class="row"><label>Ubicación<input id="projectLocation" placeholder="Ciudad, país"></label><label>Mes y año<input id="projectDate" type="month"></label></div><label>Descripción<textarea id="projectDescription" placeholder="Concepto, materiales y alcance del proyecto"></textarea></label><label>URLs de imágenes, separadas por comas<input id="projectImages" placeholder="https://..." required></label><div class="row"><button id="projectSubmit">Guardar proyecto</button><button class="secondary hidden" id="cancelProjectEdit" type="button">Cancelar edición</button></div></form></div>
-        <div class="panel"><h2 id="memberFormTitle">Nuevo miembro</h2><form id="memberForm"><input id="memberId" type="hidden"><div class="row"><label>Nombre<input id="memberName" required></label><label>Rol<input id="memberRole" required></label></div><label>Profesión<input id="memberProfession" placeholder="Arquitecta, ingeniero, diseñadora..."></label><label>Descripción<textarea id="memberDescription" placeholder="Especialidad, experiencia o presentación"></textarea></label><label>Fotografía (URL)<input id="memberPhoto" type="url" placeholder="https://..."></label><div class="row"><button id="memberSubmit">Guardar miembro</button><button class="secondary hidden" id="cancelMemberEdit" type="button">Cancelar edición</button></div></form><div class="records" id="memberRecords"></div></div>
-        <div class="panel"><h2>Contactos y redes</h2><form id="socialForm"><div class="row"><label>Instagram<input id="instagramUrl" type="url" placeholder="https://instagram.com/..."></label><label>Facebook<input id="facebookUrl" type="url" placeholder="https://facebook.com/..."></label></div><div class="row"><label>LinkedIn<input id="linkedinUrl" type="url" placeholder="https://linkedin.com/in/..."></label><label>TikTok<input id="tiktokUrl" type="url" placeholder="https://tiktok.com/@..."></label></div><div id="whatsappFields"></div><button class="secondary" id="addWhatsapp" type="button">+ Añadir WhatsApp</button><button>Guardar enlaces de contacto</button></form></div>
+        <div class="panel"><h2 id="memberFormTitle">Nuevo miembro</h2><form id="memberForm"><input id="memberId" type="hidden"><div class="row"><label>Nombre<input id="memberName" required></label><label>Rol<input id="memberRole" required></label></div><label>Profesión<input id="memberProfession" placeholder="Arquitecta, ingeniero, diseñadora..."></label><label>Descripción<textarea id="memberDescription" placeholder="Especialidad, experiencia o presentación"></textarea></label><div class="row"><label>Fotografía (URL)<input id="memberPhoto" type="url" placeholder="https://..."></label><label>Instagram (opcional)<input id="memberInstagram" type="url" placeholder="https://instagram.com/..."></label></div><div class="row"><button id="memberSubmit">Guardar miembro</button><button class="secondary hidden" id="cancelMemberEdit" type="button">Cancelar edición</button></div></form><div class="records" id="memberRecords"></div></div>
+        <div class="panel"><h2>Contactos</h2><form id="socialForm"><div class="row"><label>Instagram<input id="instagramUrl" type="url" placeholder="https://instagram.com/..."></label><label>Facebook<input id="facebookUrl" type="url" placeholder="https://facebook.com/..."></label></div><div class="row"><label>TikTok<input id="tiktokUrl" type="url" placeholder="https://tiktok.com/@..."></label><label>Correo<input id="emailUrl" type="email" placeholder="correo@ejemplo.com"></label></div><div id="whatsappFields"></div><button class="secondary" id="addWhatsapp" type="button">+ Añadir WhatsApp</button><button>Guardar contactos</button></form></div>
+        <div class="panel"><h2>Texto de inicio</h2><form id="contentForm"><label>Áreas superiores<input id="homeEyebrowInput" required></label><label>Título principal<input id="homeTitleInput" required></label><label>Texto descriptivo<textarea id="homeDescriptionInput" required></textarea></label><label>Texto del enlace<input id="homeCtaInput" required></label><button>Guardar texto de inicio</button></form></div>
+        <div class="panel"><h2 id="serviceFormTitle">Nuevo servicio</h2><form id="serviceForm"><input id="serviceId" type="hidden"><label>Nombre del servicio<input id="serviceTitle" required></label><label>Descripción<textarea id="serviceDescription" placeholder="Describe brevemente este servicio"></textarea></label><div class="row"><button id="serviceSubmit">Guardar servicio</button><button class="secondary hidden" id="cancelServiceEdit" type="button">Cancelar edición</button></div></form><div class="records" id="serviceRecords"></div></div>
         <div class="panel"><h2>Proyectos publicados</h2><div class="records" id="projectRecords"></div></div>
         <div class="panel"><button class="secondary" id="logout">Cerrar sesión</button></div>
     </section>
@@ -52,11 +54,24 @@
     const memberRoleInput = document.getElementById('memberRole');
     const memberDescriptionInput = document.getElementById('memberDescription');
     const memberPhotoInput = document.getElementById('memberPhoto');
+    const memberInstagramInput = document.getElementById('memberInstagram');
     const memberProfessionInput = document.getElementById('memberProfession');
     const memberIdInput = document.getElementById('memberId');
     const memberFormTitle = document.getElementById('memberFormTitle');
     const memberSubmit = document.getElementById('memberSubmit');
     const cancelMemberEdit = document.getElementById('cancelMemberEdit');
+    const contentInputs = {
+        homeEyebrow: document.getElementById('homeEyebrowInput'),
+        homeTitle: document.getElementById('homeTitleInput'),
+        homeDescription: document.getElementById('homeDescriptionInput'),
+        homeCta: document.getElementById('homeCtaInput')
+    };
+    const serviceTitleInput = document.getElementById('serviceTitle');
+    const serviceDescriptionInput = document.getElementById('serviceDescription');
+    const serviceIdInput = document.getElementById('serviceId');
+    const serviceFormTitle = document.getElementById('serviceFormTitle');
+    const serviceSubmit = document.getElementById('serviceSubmit');
+    const cancelServiceEdit = document.getElementById('cancelServiceEdit');
     const status = document.getElementById('status');
     const setStatus = message => { status.textContent = message; };
     const isConfigured = settings && settings.url && !settings.url.includes('TU-PROYECTO') && settings.anonKey && !settings.anonKey.includes('TU-CLAVE');
@@ -64,16 +79,30 @@
     if (!isConfigured) setStatus('Configura supabase-config.js con la URL y la clave pública de tu proyecto.');
     const showDashboard = () => { loginPanel.classList.add('hidden'); dashboard.classList.remove('hidden'); };
     const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+    const explainDataError = error => error?.message?.includes('services') ? 'Supabase todavía no tiene la tabla services. Ejecuta supabase-schema.sql en SQL Editor y vuelve a cargar el panel.' : error?.message || 'No se pudo cargar el contenido.';
     const loadRecords = async () => {
-        const [{ data: projects }, { data: members }, { data: social }] = await Promise.all([
+        const [projectsResult, membersResult, socialResult, contentResult, servicesResult] = await Promise.all([
             client.from('projects').select('id, title, images, location, description, project_date, is_example').order('created_at', { ascending: false }),
-            client.from('members').select('id, name, role, profession, description, photo').order('created_at', { ascending: false }),
-            client.from('social_links').select('platform, url')
+            client.from('members').select('id, name, role, profession, description, photo, instagram').order('created_at', { ascending: false }),
+            client.from('social_links').select('platform, url'),
+            client.from('site_content').select('content_key, content_value'),
+            client.from('services').select('id, title, description').order('created_at', { ascending: false })
         ]);
+        if (servicesResult.error) {
+            setStatus(explainDataError(servicesResult.error));
+        }
+        const { data: projects } = projectsResult;
+        const { data: members } = membersResult;
+        const { data: social } = socialResult;
+        const { data: content } = contentResult;
+        const services = servicesResult.data || [];
         projectsCache = projects || [];
         membersCache = members || [];
+        window.servicesCache = services || [];
+        document.getElementById('serviceRecords').innerHTML = window.servicesCache.map(service => `<div class="record"><span>${escapeHtml(service.title)}<small>${escapeHtml(service.description)}</small></span><span><button type="button" onclick="editService(${service.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('services', ${service.id}, 'Servicio eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay servicios guardados.</small>';
         document.getElementById('projectRecords').innerHTML = projectsCache.map(project => `<div class="record"><span>${escapeHtml(project.title)}<small>${escapeHtml(project.location)} · ${project.images.length} imagen(es)${project.is_example ? ' · ejemplo' : ''}</small></span><span><button type="button" onclick="editProject(${project.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('projects', ${project.id}, 'Proyecto eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay proyectos guardados.</small>';
         document.getElementById('memberRecords').innerHTML = membersCache.map(member => `<div class="record"><span>${escapeHtml(member.name)}<small>${escapeHtml(member.profession || member.role)}</small></span><span><button type="button" onclick="editMember(${member.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('members', ${member.id}, 'Miembro eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay miembros guardados.</small>';
+        (content || []).forEach(item => { if (contentInputs[item.content_key]) contentInputs[item.content_key].value = item.content_value; });
         (social || []).forEach(link => { const input = document.getElementById(`${link.platform}Url`); if (input) input.value = link.url; });
         const whatsappFields = document.getElementById('whatsappFields');
         whatsappFields.replaceChildren();
@@ -84,9 +113,11 @@
     let membersCache = [];
     const resetProjectForm = () => { document.getElementById('projectForm').reset(); projectIdInput.value = ''; projectFormTitle.textContent = 'Nuevo proyecto'; projectSubmit.textContent = 'Guardar proyecto'; cancelProjectEdit.classList.add('hidden'); };
     const resetMemberForm = () => { document.getElementById('memberForm').reset(); memberIdInput.value = ''; memberFormTitle.textContent = 'Nuevo miembro'; memberSubmit.textContent = 'Guardar miembro'; cancelMemberEdit.classList.add('hidden'); };
+    const resetServiceForm = () => { document.getElementById('serviceForm').reset(); serviceIdInput.value = ''; serviceFormTitle.textContent = 'Nuevo servicio'; serviceSubmit.textContent = 'Guardar servicio'; cancelServiceEdit.classList.add('hidden'); };
     window.editProject = id => { const project = projectsCache.find(item => item.id === id); if (!project) return; projectIdInput.value = project.id; projectTitleInput.value = project.title; projectLocationInput.value = project.location || ''; projectDescriptionInput.value = project.description || ''; projectDateInput.value = project.project_date ? project.project_date.slice(0, 7) : ''; projectImagesInput.value = project.images.join(', '); projectFormTitle.textContent = 'Editar proyecto'; projectSubmit.textContent = 'Actualizar proyecto'; cancelProjectEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-    window.editMember = id => { const member = membersCache.find(item => item.id === id); if (!member) return; memberIdInput.value = member.id; memberNameInput.value = member.name; memberRoleInput.value = member.role; memberProfessionInput.value = member.profession || ''; memberDescriptionInput.value = member.description || ''; memberPhotoInput.value = member.photo || ''; memberFormTitle.textContent = 'Editar miembro'; memberSubmit.textContent = 'Actualizar miembro'; cancelMemberEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-    const addWhatsappField = (platform, value = '') => { const label = document.createElement('label'); label.textContent = `WhatsApp ${platform.split('_')[1] || ''}`; const input = document.createElement('input'); input.type = 'url'; input.id = `${platform}Url`; input.placeholder = 'https://wa.me/521...'; input.value = value; label.appendChild(input); document.getElementById('whatsappFields').appendChild(label); };
+    window.editMember = id => { const member = membersCache.find(item => item.id === id); if (!member) return; memberIdInput.value = member.id; memberNameInput.value = member.name; memberRoleInput.value = member.role; memberProfessionInput.value = member.profession || ''; memberDescriptionInput.value = member.description || ''; memberPhotoInput.value = member.photo || ''; memberInstagramInput.value = member.instagram || ''; memberFormTitle.textContent = 'Editar miembro'; memberSubmit.textContent = 'Actualizar miembro'; cancelMemberEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    window.editService = id => { const service = (window.servicesCache || []).find(item => item.id === id); if (!service) return; serviceIdInput.value = service.id; serviceTitleInput.value = service.title; serviceDescriptionInput.value = service.description || ''; serviceFormTitle.textContent = 'Editar servicio'; serviceSubmit.textContent = 'Actualizar servicio'; cancelServiceEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    const addWhatsappField = (platform, value = '') => { const label = document.createElement('label'); label.textContent = `WhatsApp ${platform.split('_')[1] || ''}`; const input = document.createElement('input'); input.type = 'url'; input.id = `${platform}Url`; input.placeholder = 'https://wa.me/521...'; input.value = value; const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'secondary'; remove.textContent = 'Quitar número'; remove.addEventListener('click', () => label.remove()); label.append(input, remove); document.getElementById('whatsappFields').appendChild(label); };
     document.getElementById('addWhatsapp').addEventListener('click', () => addWhatsappField(`whatsapp_${document.querySelectorAll('#whatsappFields input').length + 1}`));
     window.deleteRecord = async (table, id, message) => { if (!confirm('¿Eliminar este elemento?')) return; const { error } = await client.from(table).delete().eq('id', id); setStatus(error ? error.message : message); if (!error) loadRecords(); };
     const explainAuthError = error => {
@@ -113,20 +144,37 @@
         setStatus(error ? error.message : projectIdInput.value ? 'Proyecto actualizado correctamente.' : 'Proyecto guardado correctamente.'); if (!error) { resetProjectForm(); loadRecords(); }
     });
     document.getElementById('memberForm').addEventListener('submit', async event => {
-        event.preventDefault(); const member = { name: memberNameInput.value, role: memberRoleInput.value, profession: memberProfessionInput.value, description: memberDescriptionInput.value, photo: memberPhotoInput.value };
+        event.preventDefault(); const member = { name: memberNameInput.value, role: memberRoleInput.value, profession: memberProfessionInput.value, description: memberDescriptionInput.value, photo: memberPhotoInput.value, instagram: memberInstagramInput.value };
         const query = memberIdInput.value ? client.from('members').update(member).eq('id', memberIdInput.value) : client.from('members').insert(member);
         const { error } = await query;
         setStatus(error ? error.message : memberIdInput.value ? 'Miembro actualizado correctamente.' : 'Miembro guardado correctamente.'); if (!error) { resetMemberForm(); loadRecords(); }
     });
+    document.getElementById('serviceForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const service = { title: serviceTitleInput.value.trim(), description: serviceDescriptionInput.value.trim() };
+        const query = serviceIdInput.value ? client.from('services').update(service).eq('id', serviceIdInput.value) : client.from('services').insert(service);
+        const { error } = await query;
+        setStatus(error ? explainDataError(error) : serviceIdInput.value ? 'Servicio actualizado correctamente.' : 'Servicio guardado correctamente.');
+        if (!error) { resetServiceForm(); loadRecords(); }
+    });
+    document.getElementById('contentForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const content = Object.entries(contentInputs).map(([content_key, input]) => ({ content_key, content_value: input.value.trim() }));
+        const { error } = await client.from('site_content').upsert(content, { onConflict: 'content_key' });
+        setStatus(error ? error.message : 'Texto de inicio guardado correctamente.');
+    });
     document.getElementById('socialForm').addEventListener('submit', async event => {
-        event.preventDefault(); const links = ['instagram', 'facebook', 'linkedin', 'tiktok'].map(platform => ({ platform, url: document.getElementById(`${platform}Url`).value.trim() })).concat([...document.querySelectorAll('#whatsappFields input')].map(input => ({ platform: input.id.replace('Url', ''), url: input.value.trim() })).filter(link => link.url));
+        event.preventDefault(); const links = ['instagram', 'facebook', 'tiktok', 'email'].map(platform => ({ platform, url: document.getElementById(`${platform}Url`).value.trim() })).filter(link => link.url).concat([...document.querySelectorAll('#whatsappFields input')].map(input => ({ platform: input.id.replace('Url', ''), url: input.value.trim() })).filter(link => link.url));
         const { error: removeWhatsappError } = await client.from('social_links').delete().like('platform', 'whatsapp_%');
         if (removeWhatsappError) return setStatus(removeWhatsappError.message);
+        const { error: removeLinkedInError } = await client.from('social_links').delete().eq('platform', 'linkedin');
+        if (removeLinkedInError) return setStatus(removeLinkedInError.message);
         const { error } = await client.from('social_links').upsert(links, { onConflict: 'platform' });
         setStatus(error ? error.message : 'Enlaces sociales guardados.'); if (!error) loadRecords();
     });
     cancelProjectEdit.addEventListener('click', resetProjectForm);
     cancelMemberEdit.addEventListener('click', resetMemberForm);
+    cancelServiceEdit.addEventListener('click', resetServiceForm);
     document.getElementById('logout').addEventListener('click', async () => { await client.auth.signOut(); dashboard.classList.add('hidden'); loginPanel.classList.remove('hidden'); setStatus('Sesión cerrada.'); });
     if (client) client.auth.getSession().then(({ data }) => { if (data.session) { showDashboard(); loadRecords(); } });
 </script>
