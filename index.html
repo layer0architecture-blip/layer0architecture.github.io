@@ -594,6 +594,7 @@
                     <i class="fa-solid fa-phone"></i>
                     <span>+52 123 456 7890</span>
                 </a>
+                <div id="whatsappLinks"></div>
             </div>
             <div class="social-links" aria-label="Redes sociales">
                 <a data-social="instagram" href="https://instagram.com/layer0_s" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
@@ -662,7 +663,7 @@
         function openProjectGallery(card) {
             document.getElementById('galleryTitle').textContent = card.dataset.title;
             const details = document.getElementById('galleryDetails');
-            const date = card.dataset.date ? new Date(`${card.dataset.date}T00:00:00`).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Fecha no especificada';
+            const date = card.dataset.date ? new Date(`${card.dataset.date}T00:00:00`).toLocaleDateString('es-MX', { year: 'numeric', month: 'long' }) : 'Fecha no especificada';
             details.replaceChildren();
             const location = document.createElement('p');
             const locationLabel = document.createElement('strong');
@@ -703,7 +704,7 @@
                 const client = window.supabase.createClient(settings.url, settings.anonKey);
                 const [{ data: projects }, { data: members }, { data: social }] = await Promise.all([
                     client.from('projects').select('title, images, location, description, project_date').order('created_at'),
-                    client.from('members').select('name, role, description, photo').order('created_at'),
+                    client.from('members').select('name, role, profession, description, photo').order('created_at'),
                     client.from('social_links').select('platform, url')
                 ]);
                 if (projects) {
@@ -712,9 +713,11 @@
                 }
                 if (members) {
                     document.querySelector('.team-grid').replaceChildren();
-                    members.forEach(member => createMemberCard(member.name, member.role, member.description, member.photo));
+                    members.forEach(member => createMemberCard(member.name, member.role, member.profession, member.description, member.photo));
                 }
                 (social || []).forEach(link => { const anchor = document.querySelector(`[data-social="${link.platform}"]`); if (anchor && link.url) anchor.href = link.url; });
+                const whatsappLinks = document.getElementById('whatsappLinks');
+                (social || []).filter(link => link.platform.startsWith('whatsapp_') && link.url).forEach(link => { const contact = document.createElement('a'); contact.className = 'contact-btn'; contact.href = link.url; contact.target = '_blank'; contact.rel = 'noreferrer'; contact.innerHTML = '<i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span>'; whatsappLinks.appendChild(contact); });
                 return;
             }
             const projects = JSON.parse(localStorage.getItem('layer0Projects') || '[]');
@@ -727,7 +730,7 @@
             if (members.length) {
                 const memberGrid = document.querySelector('.team-grid');
                 memberGrid.replaceChildren();
-                members.forEach(member => createMemberCard(member.name, member.role, member.description, member.photo));
+                members.forEach(member => createMemberCard(member.name, member.role, member.profession || '', member.description || '', member.photo || ''));
             }
         }
 
@@ -752,7 +755,7 @@
             document.querySelector('.projects-grid').appendChild(card);
         }
 
-        function createMemberCard(name, role, biographyText = '', photo = '') {
+        function createMemberCard(name, role, profession = '', biographyText = '', photo = '') {
             const member = document.createElement('div');
             member.className = 'team-member';
             const avatar = document.createElement('div');
@@ -769,10 +772,12 @@
             title.textContent = name;
             const roleLabel = document.createElement('p');
             roleLabel.textContent = role;
+            const professionLabel = document.createElement('p');
+            professionLabel.textContent = profession;
             const biography = document.createElement('p');
             biography.className = 'member-description';
             biography.textContent = biographyText || '';
-            member.append(avatar, title, roleLabel, biography);
+            member.append(avatar, title, professionLabel, roleLabel, biography);
             document.querySelector('.team-grid').appendChild(member);
         }
 
