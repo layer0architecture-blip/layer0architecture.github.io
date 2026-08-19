@@ -34,6 +34,20 @@
             overflow-x: hidden;
         }
 
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            right: -22vw;
+            width: 72vw;
+            height: 100vh;
+            background: url('logo.jpg') center / contain no-repeat;
+            opacity: 0.08;
+            pointer-events: none;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
         /* BARRA LATERAL RETRÁCTIL */
         aside {
             position: fixed;
@@ -50,6 +64,8 @@
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1000;
         }
+
+        main { position: relative; z-index: 1; }
 
         aside.collapsed {
             transform: translateX(-220px);
@@ -82,7 +98,7 @@
             height: 149px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid var(--border-color);
+            border: 0;
             margin-bottom: 1rem;
             transition: all 0.3s ease;
         }
