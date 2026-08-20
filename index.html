@@ -751,6 +751,13 @@
         document.getElementById('zoomIn').addEventListener('click', () => setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) + .5));
         document.getElementById('zoomOut').addEventListener('click', () => setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) - .5));
         document.getElementById('zoomReset').addEventListener('click', () => setImageZoom(1));
+        document.getElementById('expandedImage').addEventListener('click', event => {
+            const image = event.currentTarget;
+            const viewport = document.getElementById('imageViewport');
+            const bounds = viewport.getBoundingClientRect();
+            image.style.transformOrigin = `${((event.clientX - bounds.left) / bounds.width) * 100}% ${((event.clientY - bounds.top) / bounds.height) * 100}%`;
+            setImageZoom(Number(image.dataset.zoom || 1) > 1 ? 1 : 2);
+        });
         document.getElementById('expandedImage').addEventListener('dblclick', () => setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) > 1 ? 1 : 2));
         document.getElementById('imageViewport').addEventListener('pointermove', event => {
             const image = document.getElementById('expandedImage');
