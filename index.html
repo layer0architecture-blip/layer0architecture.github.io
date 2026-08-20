@@ -341,11 +341,9 @@
         .zoom-level { color: var(--text-muted); font-size: .72rem; min-width: 2.5rem; text-align: center; }
         .image-tools button { width: 2.2rem; height: 2.2rem; padding: 0; border: 1px solid var(--border-color); background: transparent; color: var(--text-main); cursor: pointer; }
         .image-tools button:hover { color: var(--accent); border-color: var(--accent); }
-        .image-viewport { height: min(75vh, 800px); overflow: auto; display: flex; align-items: center; justify-content: center; background: #101313; }
-        .image-viewport img { display: block; width: auto; max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center; transition: transform .2s ease; cursor: zoom-in; }
-        .image-viewport.is-zoomed { display: block; }
-        .image-viewport.is-zoomed img { max-width: none; max-height: none; cursor: grab; }
-        .image-viewport.is-zoomed img:active { cursor: grabbing; }
+        .image-viewport { height: min(75vh, 800px); overflow: hidden; display: flex; align-items: center; justify-content: center; background: #101313; }
+        .image-viewport img { display: block; width: auto; max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center; transition: transform .12s ease-out; cursor: zoom-in; user-select: none; }
+        .image-viewport.is-zoomed img { cursor: zoom-out; }
         .image-caption { color: var(--text-muted); line-height: 1.6; margin-top: 1rem; }
         .gallery-details { border-top: 1px solid var(--border-color); margin: 0 0 1.4rem; padding-top: 1.2rem; color: var(--text-muted); line-height: 1.7; }
         .gallery-details strong { color: var(--accent-soft); font-weight: 500; }
@@ -714,9 +712,12 @@
             const expandedImage = document.getElementById('expandedImage');
             document.getElementById('imageTitle').textContent = image.title || 'Imagen del proyecto';
             expandedImage.src = getHighResolutionUrl(image.url);
+            expandedImage.decoding = 'async';
+            expandedImage.loading = 'eager';
             expandedImage.alt = image.title || 'Imagen del proyecto';
             imageViewport.classList.remove('is-zoomed');
             expandedImage.style.transform = 'scale(1)';
+            expandedImage.style.transformOrigin = 'center';
             expandedImage.style.width = 'auto';
             expandedImage.dataset.zoom = '1';
             document.getElementById('zoomLevel').textContent = '100%';
@@ -727,8 +728,12 @@
         function getHighResolutionUrl(url) {
             const source = String(url);
             if (!/images\.unsplash\.com/i.test(source)) return source;
-            const separator = source.includes('?') ? '&' : '?';
-            return source.replace(/([?&])w=\d+/i, '$1w=2400').replace(/([?&])q=\d+/i, '$1q=100').includes('w=2400') ? source.replace(/([?&])w=\d+/i, '$1w=2400').replace(/([?&])q=\d+/i, '$1q=100') : `${source}${separator}fit=max&w=2400&q=100`;
+            const parsed = new URL(source);
+            parsed.searchParams.set('fit', 'max');
+            parsed.searchParams.set('w', '3840');
+            parsed.searchParams.set('q', '100');
+            parsed.searchParams.set('dpr', '2');
+            return parsed.toString();
         }
 
         function setImageZoom(nextZoom) {
@@ -737,15 +742,24 @@
             const zoom = Math.min(4, Math.max(1, nextZoom));
             expandedImage.dataset.zoom = String(zoom);
             expandedImage.style.transform = 'none';
-            expandedImage.style.width = zoom > 1 ? `${zoom * 100}%` : 'auto';
+            expandedImage.style.width = 'auto';
             document.getElementById('zoomLevel').textContent = `${Math.round(zoom * 100)}%`;
             imageViewport.classList.toggle('is-zoomed', zoom > 1);
+            expandedImage.style.transform = `scale(${zoom})`;
         }
 
         document.getElementById('zoomIn').addEventListener('click', () => setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) + .5));
         document.getElementById('zoomOut').addEventListener('click', () => setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) - .5));
         document.getElementById('zoomReset').addEventListener('click', () => setImageZoom(1));
         document.getElementById('expandedImage').addEventListener('dblclick', () => setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) > 1 ? 1 : 2));
+        document.getElementById('imageViewport').addEventListener('pointermove', event => {
+            const image = document.getElementById('expandedImage');
+            if (Number(image.dataset.zoom || 1) <= 1) return;
+            const bounds = event.currentTarget.getBoundingClientRect();
+            const originX = ((event.clientX - bounds.left) / bounds.width) * 100;
+            const originY = ((event.clientY - bounds.top) / bounds.height) * 100;
+            image.style.transformOrigin = `${originX}% ${originY}%`;
+        });
         document.getElementById('imageViewport').addEventListener('wheel', event => {
             if (!document.getElementById('imageModal').classList.contains('open')) return;
             event.preventDefault();
