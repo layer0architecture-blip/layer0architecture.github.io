@@ -329,9 +329,11 @@
         .modal .action-btn { justify-content: center; width: 100%; margin-top: 0.5rem; }
         .gallery-modal { width: min(100%, 1100px); max-height: calc(100vh - 2rem); overflow-y: auto; }
         .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        .gallery-item { margin: 0; background: #101313; border: 1px solid var(--border-color); }
-        .gallery-item button { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
-        .gallery-grid img { display: block; width: 100%; height: auto; object-fit: contain; }
+        .gallery-item { margin: 0; background: #101313; border: 1px solid var(--border-color); opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+        .gallery-item.is-visible { opacity: 1; transform: translateY(0); }
+        .gallery-item button { display: flex; align-items: center; justify-content: center; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+        .gallery-grid img { display: block; width: auto; max-width: 100%; max-height: calc(100vh - 250px); height: auto; object-fit: contain; }
+        @media (prefers-reduced-motion: reduce) { .gallery-item { transition: none; transform: none; } }
         .gallery-caption { padding: .8rem 1rem 1rem; color: var(--text-muted); font-size: .8rem; line-height: 1.5; }
         .gallery-caption strong { display: block; color: var(--accent-soft); font-size: .9rem; margin-bottom: .25rem; }
         .image-modal { width: min(100%, 1100px); }
@@ -707,6 +709,14 @@
             openModal('imageModal');
         }
 
+        function revealGalleryItems() {
+            const gallery = document.getElementById('galleryModal');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => entry.target.classList.toggle('is-visible', entry.isIntersecting));
+            }, { root: gallery, threshold: 0.12 });
+            document.querySelectorAll('#galleryGrid .gallery-item').forEach(item => observer.observe(item));
+        }
+
         function openProjectGallery(card) {
             document.getElementById('galleryTitle').textContent = card.dataset.title;
             const details = document.getElementById('galleryDetails');
@@ -745,6 +755,7 @@
                 gallery.appendChild(figure);
             });
             openModal('galleryModal');
+            revealGalleryItems();
         }
 
         function saveData() {
