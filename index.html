@@ -338,6 +338,7 @@
         .gallery-caption strong { display: block; color: var(--accent-soft); font-size: .9rem; margin-bottom: .25rem; }
         .image-modal { width: min(100%, 1100px); }
         .image-tools { display: flex; align-items: center; gap: .5rem; }
+        .zoom-level { color: var(--text-muted); font-size: .72rem; min-width: 2.5rem; text-align: center; }
         .image-tools button { width: 2.2rem; height: 2.2rem; padding: 0; border: 1px solid var(--border-color); background: transparent; color: var(--text-main); cursor: pointer; }
         .image-tools button:hover { color: var(--accent); border-color: var(--accent); }
         .image-viewport { height: min(75vh, 800px); overflow: auto; display: flex; align-items: center; justify-content: center; background: #101313; }
@@ -645,7 +646,7 @@
         </div>
     </div>
     <div class="modal-backdrop" id="imageModal" role="dialog" aria-modal="true" aria-labelledby="imageTitle">
-        <div class="modal image-modal"><div class="modal-header"><h2 id="imageTitle">Imagen</h2><div class="image-tools"><button type="button" id="zoomOut" aria-label="Alejar" title="Alejar">−</button><button type="button" id="zoomReset" aria-label="Tamaño original" title="Tamaño original">1:1</button><button type="button" id="zoomIn" aria-label="Acercar" title="Acercar">+</button><button class="close-modal" type="button" onclick="closeModal('imageModal')" aria-label="Cerrar">&times;</button></div></div><div class="image-viewport" id="imageViewport"><img id="expandedImage" alt=""></div><p class="image-caption" id="imageCaption"></p></div>
+        <div class="modal image-modal"><div class="modal-header"><h2 id="imageTitle">Imagen</h2><div class="image-tools"><button type="button" id="zoomOut" aria-label="Alejar" title="Alejar">−</button><span class="zoom-level" id="zoomLevel">100%</span><button type="button" id="zoomIn" aria-label="Acercar" title="Acercar">+</button><button type="button" id="zoomReset" aria-label="Tamaño original" title="Tamaño original">1:1</button><button class="close-modal" type="button" onclick="closeModal('imageModal')" aria-label="Cerrar">&times;</button></div></div><div class="image-viewport" id="imageViewport"><img id="expandedImage" alt=""></div><p class="image-caption" id="imageCaption"></p></div>
     </div>
 
     <script>
@@ -718,12 +719,16 @@
             expandedImage.style.transform = 'scale(1)';
             expandedImage.style.width = 'auto';
             expandedImage.dataset.zoom = '1';
+            document.getElementById('zoomLevel').textContent = '100%';
             document.getElementById('imageCaption').textContent = [image.description, image.author && `Autor: ${image.author}`, image.location && `Lugar: ${image.location}`, image.date && `Fecha: ${image.date}`].filter(Boolean).join(' · ');
             openModal('imageModal');
         }
 
         function getHighResolutionUrl(url) {
-            return String(url).replace(/([?&])w=\d+/i, '$1w=2400');
+            const source = String(url);
+            if (!/images\.unsplash\.com/i.test(source)) return source;
+            const separator = source.includes('?') ? '&' : '?';
+            return source.replace(/([?&])w=\d+/i, '$1w=2400').replace(/([?&])q=\d+/i, '$1q=100').includes('w=2400') ? source.replace(/([?&])w=\d+/i, '$1w=2400').replace(/([?&])q=\d+/i, '$1q=100') : `${source}${separator}fit=max&w=2400&q=100`;
         }
 
         function setImageZoom(nextZoom) {
@@ -733,6 +738,7 @@
             expandedImage.dataset.zoom = String(zoom);
             expandedImage.style.transform = 'none';
             expandedImage.style.width = zoom > 1 ? `${zoom * 100}%` : 'auto';
+            document.getElementById('zoomLevel').textContent = `${Math.round(zoom * 100)}%`;
             imageViewport.classList.toggle('is-zoomed', zoom > 1);
         }
 
