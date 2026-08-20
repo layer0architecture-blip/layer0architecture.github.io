@@ -327,9 +327,16 @@
         .modal label { color: var(--text-muted); font-size: 0.78rem; letter-spacing: 1px; }
         .modal input { width: 100%; margin-top: 0.4rem; padding: 0.8rem; border: 1px solid var(--border-color); background: #101313; color: var(--text-main); font: inherit; }
         .modal .action-btn { justify-content: center; width: 100%; margin-top: 0.5rem; }
-        .gallery-modal { width: min(100%, 900px); }
+        .gallery-modal { width: min(100%, 900px); max-height: calc(100vh - 2rem); overflow: auto; }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
-        .gallery-grid img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+        .gallery-item { margin: 0; background: #101313; border: 1px solid var(--border-color); }
+        .gallery-item button { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+        .gallery-grid img { display: block; width: 100%; height: auto; max-height: 70vh; object-fit: contain; }
+        .gallery-caption { padding: .8rem 1rem 1rem; color: var(--text-muted); font-size: .8rem; line-height: 1.5; }
+        .gallery-caption strong { display: block; color: var(--accent-soft); font-size: .9rem; margin-bottom: .25rem; }
+        .image-modal { width: min(100%, 1100px); }
+        .image-modal img { display: block; width: 100%; max-height: 75vh; object-fit: contain; background: #101313; }
+        .image-caption { color: var(--text-muted); line-height: 1.6; margin-top: 1rem; }
         .gallery-details { border-top: 1px solid var(--border-color); margin: 0 0 1.4rem; padding-top: 1.2rem; color: var(--text-muted); line-height: 1.7; }
         .gallery-details strong { color: var(--accent-soft); font-weight: 500; }
 
@@ -628,6 +635,9 @@
             <div class="gallery-grid" id="galleryGrid"></div>
         </div>
     </div>
+    <div class="modal-backdrop" id="imageModal" role="dialog" aria-modal="true" aria-labelledby="imageTitle">
+        <div class="modal image-modal"><div class="modal-header"><h2 id="imageTitle">Imagen</h2><button class="close-modal" type="button" onclick="closeModal('imageModal')" aria-label="Cerrar">&times;</button></div><img id="expandedImage" alt=""><p class="image-caption" id="imageCaption"></p></div>
+    </div>
 
     <script>
         const sidebar = document.getElementById('sidebar');
@@ -676,6 +686,27 @@
             document.getElementById(modalId).classList.remove('open');
         }
 
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+        }
+
+        function normalizeImageDetails(images, details = []) {
+            const legacyImages = Array.isArray(images) ? images : String(images || '').split(',');
+            const savedDetails = Array.isArray(details) ? details : [];
+            return legacyImages.map((image, index) => {
+                const detail = typeof savedDetails[index] === 'object' ? savedDetails[index] : {};
+                return { url: detail.url || String(image).trim(), title: detail.title || '', description: detail.description || '', author: detail.author || '', location: detail.location || '', date: detail.date || '' };
+            }).filter(image => image.url);
+        }
+
+        function openExpandedImage(image) {
+            document.getElementById('imageTitle').textContent = image.title || 'Imagen del proyecto';
+            document.getElementById('expandedImage').src = image.url;
+            document.getElementById('expandedImage').alt = image.title || 'Imagen del proyecto';
+            document.getElementById('imageCaption').textContent = [image.description, image.author && `Autor: ${image.author}`, image.location && `Lugar: ${image.location}`, image.date && `Fecha: ${image.date}`].filter(Boolean).join(' · ');
+            openModal('imageModal');
+        }
+
         function openProjectGallery(card) {
             document.getElementById('galleryTitle').textContent = card.dataset.title;
             const details = document.getElementById('galleryDetails');
@@ -694,11 +725,24 @@
             details.append(location, projectDate, description);
             const gallery = document.getElementById('galleryGrid');
             gallery.replaceChildren();
-            card.dataset.images.split(',').map(image => image.trim()).filter(Boolean).forEach((image, index) => {
+            normalizeImageDetails(card.dataset.images, JSON.parse(card.dataset.imageDetails || '[]')).forEach((image, index) => {
+                const figure = document.createElement('figure');
+                figure.className = 'gallery-item';
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.addEventListener('click', () => openExpandedImage(image));
                 const imageElement = document.createElement('img');
-                imageElement.src = image;
+                imageElement.src = image.url;
                 imageElement.alt = `${card.dataset.title}, imagen ${index + 1}`;
-                gallery.appendChild(imageElement);
+                button.appendChild(imageElement);
+                figure.appendChild(button);
+                if (image.title || image.description || image.author || image.location || image.date) {
+                    const caption = document.createElement('figcaption');
+                    caption.className = 'gallery-caption';
+                    caption.innerHTML = `<strong>${escapeHtml(image.title || 'Imagen')}</strong>${escapeHtml([image.description, image.author && `Autor: ${image.author}`, image.location && `Lugar: ${image.location}`, image.date && `Fecha: ${image.date}`].filter(Boolean).join(' · '))}`;
+                    figure.appendChild(caption);
+                }
+                gallery.appendChild(figure);
             });
             openModal('galleryModal');
         }
@@ -719,7 +763,7 @@
             if (settings && settings.url && !settings.url.includes('TU-PROYECTO') && window.supabase) {
                 const client = window.supabase.createClient(settings.url, settings.anonKey);
                 const [projectsResult, membersResult, socialResult, contentResult, servicesResult] = await Promise.all([
-                    client.from('projects').select('title, images, location, description, project_date').order('created_at'),
+                    client.from('projects').select('title, images, image_details, location, description, project_date').order('created_at'),
                     client.from('members').select('name, role, profession, description, photo, instagram').order('created_at'),
                     client.from('social_links').select('platform, url'),
                     client.from('site_content').select('content_key, content_value'),
@@ -740,7 +784,7 @@
                     }
                 if (projects) {
                     document.querySelector('.projects-grid').replaceChildren();
-                    projects.forEach(project => createProjectCard(project.title, project.images.join(','), project.location, project.description, project.project_date));
+                    projects.forEach(project => createProjectCard(project.title, project.images, project.location, project.description, project.project_date, project.image_details));
                 }
                 if (members) {
                     document.querySelector('.team-grid').replaceChildren();
@@ -760,7 +804,7 @@
             if (projects.length) {
                 const projectGrid = document.querySelector('.projects-grid');
                 projectGrid.replaceChildren();
-                projects.forEach(project => createProjectCard(project.title, project.images, project.location, project.description, project.project_date));
+                projects.forEach(project => createProjectCard(project.title, project.images, project.location, project.description, project.project_date, project.image_details));
             }
             if (members.length) {
                 const memberGrid = document.querySelector('.team-grid');
@@ -803,17 +847,19 @@
             document.getElementById('servicesGrid').appendChild(service);
         }
 
-        function createProjectCard(name, images, location = '', description = '', projectDate = '') {
+        function createProjectCard(name, images, location = '', description = '', projectDate = '', imageDetails = []) {
             const card = document.createElement('div');
             card.className = 'project-card';
             card.dataset.title = name;
-            card.dataset.images = images;
+            const normalizedImages = normalizeImageDetails(images, imageDetails);
+            card.dataset.images = normalizedImages.map(image => image.url).join(',');
+            card.dataset.imageDetails = JSON.stringify(normalizedImages);
             card.dataset.location = location || '';
             card.dataset.description = description || '';
             card.dataset.date = projectDate || '';
             card.addEventListener('click', () => openProjectGallery(card));
             const image = document.createElement('img');
-            image.src = images.split(',')[0].trim();
+            image.src = normalizedImages[0]?.url || '';
             image.alt = name;
             const overlay = document.createElement('div');
             overlay.className = 'project-overlay';

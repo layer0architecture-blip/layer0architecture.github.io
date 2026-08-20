@@ -14,6 +14,11 @@
         main { width: min(920px, 100%); margin: auto; padding: 4rem 1.5rem; } .eyebrow { color: var(--accent); font: 500 .75rem 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; }
         h1 { font-size: clamp(2rem, 5vw, 4rem); font-weight: 600; margin: .8rem 0 2rem; } h2 { font-size: 1.1rem; margin: 0 0 1.2rem; }
         .panel { background: var(--panel); border: 1px solid var(--line); padding: 1.5rem; margin-top: 1.5rem; } form { display: grid; gap: 1rem; } label { color: var(--muted); font-size: .8rem; } input, textarea { display: block; width: 100%; margin-top: .4rem; padding: .85rem; color: var(--text); background: #101313; border: 1px solid var(--line); font: inherit; } textarea { min-height: 100px; resize: vertical; } button { padding: .85rem 1rem; color: #151817; background: var(--accent); border: 0; cursor: pointer; font: 600 .85rem Manrope; } button.secondary { color: var(--text); background: transparent; border: 1px solid var(--line); } button.danger { color: #f5d8d2; background: transparent; border: 1px solid #8b5148; } .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; } .hidden { display: none; } .status { color: var(--muted); min-height: 1.5em; } .records { display: grid; gap: .6rem; margin-top: 1.2rem; } .record { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .8rem; border: 1px solid var(--line); } .record small { display: block; color: var(--muted); margin-top: .25rem; } @media (max-width: 640px) { .row { grid-template-columns: 1fr; } .record { align-items: flex-start; flex-direction: column; } }
+        .image-editor { display: grid; gap: 1rem; }
+        .image-row { border: 1px solid var(--line); padding: 1rem; display: grid; gap: .8rem; }
+        .image-row-header { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font: 500 .75rem 'DM Mono', monospace; text-transform: uppercase; }
+        .image-row .row { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 640px) { .image-row .row { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -25,7 +30,7 @@
         <form id="loginForm"><label>Correo<input id="email" type="email" required autocomplete="email"></label><label>Contraseña<input id="password" type="password" required autocomplete="current-password"></label><button>Entrar</button></form>
     </section>
     <section class="hidden" id="dashboard">
-        <div class="panel"><h2 id="projectFormTitle">Nuevo proyecto</h2><form id="projectForm"><input id="projectId" type="hidden"><label>Nombre<input id="projectTitle" required></label><div class="row"><label>Ubicación<input id="projectLocation" placeholder="Ciudad, país"></label><label>Mes y año<input id="projectDate" type="month"></label></div><label>Descripción<textarea id="projectDescription" placeholder="Concepto, materiales y alcance del proyecto"></textarea></label><label>URLs de imágenes, separadas por comas<input id="projectImages" placeholder="https://..." required></label><div class="row"><button id="projectSubmit">Guardar proyecto</button><button class="secondary hidden" id="cancelProjectEdit" type="button">Cancelar edición</button></div></form></div>
+        <div class="panel"><h2 id="projectFormTitle">Nuevo proyecto</h2><form id="projectForm"><input id="projectId" type="hidden"><label>Nombre<input id="projectTitle" required></label><div class="row"><label>Ubicación<input id="projectLocation" placeholder="Ciudad, país"></label><label>Mes y año<input id="projectDate" type="month"></label></div><label>Descripción<textarea id="projectDescription" placeholder="Concepto, materiales y alcance del proyecto"></textarea></label><div><label>Imágenes del proyecto</label><div class="image-editor" id="imageEditor"></div><button class="secondary" id="addImage" type="button">+ Añadir imagen</button></div><div class="row"><button id="projectSubmit">Guardar proyecto</button><button class="secondary hidden" id="cancelProjectEdit" type="button">Cancelar edición</button></div></form></div>
         <div class="panel"><h2 id="memberFormTitle">Nuevo miembro</h2><form id="memberForm"><input id="memberId" type="hidden"><div class="row"><label>Nombre<input id="memberName" required></label><label>Rol<input id="memberRole" required></label></div><label>Profesión<input id="memberProfession" placeholder="Arquitecta, ingeniero, diseñadora..."></label><label>Descripción<textarea id="memberDescription" placeholder="Especialidad, experiencia o presentación"></textarea></label><div class="row"><label>Fotografía (URL)<input id="memberPhoto" type="url" placeholder="https://..."></label><label>Instagram (opcional)<input id="memberInstagram" type="url" placeholder="https://instagram.com/..."></label></div><div class="row"><button id="memberSubmit">Guardar miembro</button><button class="secondary hidden" id="cancelMemberEdit" type="button">Cancelar edición</button></div></form><div class="records" id="memberRecords"></div></div>
         <div class="panel"><h2>Contactos</h2><form id="socialForm"><div class="row"><label>Instagram<input id="instagramUrl" type="url" placeholder="https://instagram.com/..."></label><label>Facebook<input id="facebookUrl" type="url" placeholder="https://facebook.com/..."></label></div><div class="row"><label>TikTok<input id="tiktokUrl" type="url" placeholder="https://tiktok.com/@..."></label><label>Correo<input id="emailUrl" type="email" placeholder="correo@ejemplo.com"></label></div><div id="whatsappFields"></div><button class="secondary" id="addWhatsapp" type="button">+ Añadir WhatsApp</button><button>Guardar contactos</button></form></div>
         <div class="panel"><h2>Texto de inicio</h2><form id="contentForm"><label>Áreas superiores<input id="homeEyebrowInput" required></label><label>Título principal<input id="homeTitleInput" required></label><label>Texto descriptivo<textarea id="homeDescriptionInput" required></textarea></label><label>Texto del enlace<input id="homeCtaInput" required></label><button>Guardar texto de inicio</button></form></div>
@@ -42,7 +47,7 @@
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const projectTitleInput = document.getElementById('projectTitle');
-    const projectImagesInput = document.getElementById('projectImages');
+    const imageEditor = document.getElementById('imageEditor');
     const projectLocationInput = document.getElementById('projectLocation');
     const projectDescriptionInput = document.getElementById('projectDescription');
     const projectDateInput = document.getElementById('projectDate');
@@ -82,7 +87,7 @@
     const explainDataError = error => error?.message?.includes('services') ? 'Supabase todavía no tiene la tabla services. Ejecuta supabase-schema.sql en SQL Editor y vuelve a cargar el panel.' : error?.message || 'No se pudo cargar el contenido.';
     const loadRecords = async () => {
         const [projectsResult, membersResult, socialResult, contentResult, servicesResult] = await Promise.all([
-            client.from('projects').select('id, title, images, location, description, project_date, is_example').order('created_at', { ascending: false }),
+            client.from('projects').select('id, title, images, image_details, location, description, project_date, is_example').order('created_at', { ascending: false }),
             client.from('members').select('id, name, role, profession, description, photo, instagram').order('created_at', { ascending: false }),
             client.from('social_links').select('platform, url'),
             client.from('site_content').select('content_key, content_value'),
@@ -111,10 +116,24 @@
     };
     let projectsCache = [];
     let membersCache = [];
-    const resetProjectForm = () => { document.getElementById('projectForm').reset(); projectIdInput.value = ''; projectFormTitle.textContent = 'Nuevo proyecto'; projectSubmit.textContent = 'Guardar proyecto'; cancelProjectEdit.classList.add('hidden'); };
+    const addImageRow = (detail = {}) => {
+        const row = document.createElement('div');
+        row.className = 'image-row';
+        row.innerHTML = `<div class="image-row-header"><span>Imagen</span><button class="danger" type="button">Eliminar imagen</button></div><label>URL<input class="image-url" type="url" placeholder="https://..." required></label><label>Título<input class="image-title" placeholder="Vista exterior, detalle..." /></label><label>Descripción<textarea class="image-description" placeholder="Descripción de esta imagen"></textarea></label><div class="row"><label>Autor<input class="image-author" placeholder="Opcional"></label><label>Lugar<input class="image-location" placeholder="Opcional"></label></div><label>Fecha<input class="image-date" placeholder="Opcional"></label>`;
+        row.querySelector('.image-url').value = detail.url || '';
+        row.querySelector('.image-title').value = detail.title || '';
+        row.querySelector('.image-description').value = detail.description || '';
+        row.querySelector('.image-author').value = detail.author || '';
+        row.querySelector('.image-location').value = detail.location || '';
+        row.querySelector('.image-date').value = detail.date || '';
+        row.querySelector('button').addEventListener('click', () => row.remove());
+        imageEditor.appendChild(row);
+    };
+    const readImageDetails = () => [...imageEditor.querySelectorAll('.image-row')].map(row => ({ url: row.querySelector('.image-url').value.trim(), title: row.querySelector('.image-title').value.trim(), description: row.querySelector('.image-description').value.trim(), author: row.querySelector('.image-author').value.trim(), location: row.querySelector('.image-location').value.trim(), date: row.querySelector('.image-date').value.trim() })).filter(image => image.url);
+    const resetProjectForm = () => { document.getElementById('projectForm').reset(); projectIdInput.value = ''; imageEditor.replaceChildren(); addImageRow(); projectFormTitle.textContent = 'Nuevo proyecto'; projectSubmit.textContent = 'Guardar proyecto'; cancelProjectEdit.classList.add('hidden'); };
     const resetMemberForm = () => { document.getElementById('memberForm').reset(); memberIdInput.value = ''; memberFormTitle.textContent = 'Nuevo miembro'; memberSubmit.textContent = 'Guardar miembro'; cancelMemberEdit.classList.add('hidden'); };
     const resetServiceForm = () => { document.getElementById('serviceForm').reset(); serviceIdInput.value = ''; serviceFormTitle.textContent = 'Nuevo servicio'; serviceSubmit.textContent = 'Guardar servicio'; cancelServiceEdit.classList.add('hidden'); };
-    window.editProject = id => { const project = projectsCache.find(item => item.id === id); if (!project) return; projectIdInput.value = project.id; projectTitleInput.value = project.title; projectLocationInput.value = project.location || ''; projectDescriptionInput.value = project.description || ''; projectDateInput.value = project.project_date ? project.project_date.slice(0, 7) : ''; projectImagesInput.value = project.images.join(', '); projectFormTitle.textContent = 'Editar proyecto'; projectSubmit.textContent = 'Actualizar proyecto'; cancelProjectEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    window.editProject = id => { const project = projectsCache.find(item => item.id === id); if (!project) return; projectIdInput.value = project.id; projectTitleInput.value = project.title; projectLocationInput.value = project.location || ''; projectDescriptionInput.value = project.description || ''; projectDateInput.value = project.project_date ? project.project_date.slice(0, 7) : ''; imageEditor.replaceChildren(); const details = Array.isArray(project.image_details) && project.image_details.length ? project.image_details : project.images.map(url => ({ url })); details.forEach(addImageRow); projectFormTitle.textContent = 'Editar proyecto'; projectSubmit.textContent = 'Actualizar proyecto'; cancelProjectEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     window.editMember = id => { const member = membersCache.find(item => item.id === id); if (!member) return; memberIdInput.value = member.id; memberNameInput.value = member.name; memberRoleInput.value = member.role; memberProfessionInput.value = member.profession || ''; memberDescriptionInput.value = member.description || ''; memberPhotoInput.value = member.photo || ''; memberInstagramInput.value = member.instagram || ''; memberFormTitle.textContent = 'Editar miembro'; memberSubmit.textContent = 'Actualizar miembro'; cancelMemberEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     window.editService = id => { const service = (window.servicesCache || []).find(item => item.id === id); if (!service) return; serviceIdInput.value = service.id; serviceTitleInput.value = service.title; serviceDescriptionInput.value = service.description || ''; serviceFormTitle.textContent = 'Editar servicio'; serviceSubmit.textContent = 'Actualizar servicio'; cancelServiceEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     const addWhatsappField = (platform, value = '') => { const label = document.createElement('label'); label.textContent = `WhatsApp ${platform.split('_')[1] || ''}`; const input = document.createElement('input'); input.type = 'url'; input.id = `${platform}Url`; input.placeholder = 'https://wa.me/521...'; input.value = value; const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'secondary'; remove.textContent = 'Quitar número'; remove.addEventListener('click', () => label.remove()); label.append(input, remove); document.getElementById('whatsappFields').appendChild(label); };
@@ -137,8 +156,8 @@
         showDashboard(); loadRecords(); setStatus('Sesión iniciada.');
     });
     document.getElementById('projectForm').addEventListener('submit', async event => {
-        event.preventDefault(); const images = projectImagesInput.value.split(',').map(item => item.trim()).filter(Boolean);
-        const project = { title: projectTitleInput.value, images, location: projectLocationInput.value, description: projectDescriptionInput.value, project_date: projectDateInput.value ? `${projectDateInput.value}-01` : null };
+        event.preventDefault(); const imageDetails = readImageDetails(); const images = imageDetails.map(image => image.url);
+        const project = { title: projectTitleInput.value, images, image_details: imageDetails, location: projectLocationInput.value, description: projectDescriptionInput.value, project_date: projectDateInput.value ? `${projectDateInput.value}-01` : null };
         const query = projectIdInput.value ? client.from('projects').update(project).eq('id', projectIdInput.value) : client.from('projects').insert(project);
         const { error } = await query;
         setStatus(error ? error.message : projectIdInput.value ? 'Proyecto actualizado correctamente.' : 'Proyecto guardado correctamente.'); if (!error) { resetProjectForm(); loadRecords(); }
@@ -173,10 +192,12 @@
         setStatus(error ? error.message : 'Enlaces sociales guardados.'); if (!error) loadRecords();
     });
     cancelProjectEdit.addEventListener('click', resetProjectForm);
+    document.getElementById('addImage').addEventListener('click', () => addImageRow());
     cancelMemberEdit.addEventListener('click', resetMemberForm);
     cancelServiceEdit.addEventListener('click', resetServiceForm);
     document.getElementById('logout').addEventListener('click', async () => { await client.auth.signOut(); dashboard.classList.add('hidden'); loginPanel.classList.remove('hidden'); setStatus('Sesión cerrada.'); });
     if (client) client.auth.getSession().then(({ data }) => { if (data.session) { showDashboard(); loadRecords(); } });
+    addImageRow();
 </script>
 </body>
 </html>
