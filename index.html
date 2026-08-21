@@ -148,6 +148,8 @@
             color: var(--accent);
         }
 
+        nav.menu a.service-nav-link { margin-top: -.6rem; }
+
         .nav-text {
             transition: opacity 0.2s;
         }
@@ -260,11 +262,12 @@
         }
 
         .service-item { cursor: pointer; }
+        .service-item:hover, .service-item:focus-within, .service-item.is-open { border-color: var(--accent); box-shadow: 0 0 16px rgba(213, 173, 112, .22); }
         .service-item:hover p, .service-item:focus-within p, .service-item.is-open p { max-height: 8rem; opacity: 1; }
         .service-item button { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
         .service-graphic { display: block; color: var(--accent); font-size: 1.2rem; margin-bottom: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .3s ease, margin .3s ease, opacity .3s ease; }
         .service-item:hover .service-graphic, .service-item:focus-within .service-graphic, .service-item.is-open .service-graphic { max-height: 2rem; margin-bottom: .8rem; opacity: 1; }
-        .section-title-mark { width: 1.7rem; height: 1.7rem; object-fit: cover; vertical-align: middle; margin-right: .7rem; border-radius: 50%; }
+        .section-title-mark { width: 3.4rem; height: 3.4rem; object-fit: cover; vertical-align: middle; margin: -.7rem .7rem -.7rem 0; border-radius: 50%; filter: invert(1) grayscale(1) contrast(1.4); mix-blend-mode: screen; }
 
         .intro h1 {
             color: var(--accent-soft);
@@ -431,7 +434,15 @@
             border: 1px solid var(--border-color);
             padding: 2rem 1.5rem;
             text-align: center;
+            position: relative;
+            transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
         }
+
+        .team-member { isolation: isolate; }
+        .team-member::after { content: ''; position: absolute; inset: -8px; z-index: 0; background: var(--accent); filter: blur(28px); opacity: 0; transition: opacity .3s ease; }
+        .team-member > * { position: relative; z-index: 1; }
+        .team-member:hover, .team-member:focus-within { border-color: var(--accent); box-shadow: 0 0 18px rgba(213, 173, 112, .42); transform: translateY(-3px); }
+        .team-member:hover::after, .team-member:focus-within::after { opacity: .32; }
 
         .member-avatar {
             width: 157.5px;
@@ -544,6 +555,10 @@
                 <i class="fa-solid fa-layer-group"></i>
                 <span class="nav-text">Proyectos</span>
             </a>
+            <a href="#" class="service-nav-link" onclick="switchTab('servicios', event)">
+                <i class="fa-solid fa-compass-drafting"></i>
+                <span class="nav-text">Servicios</span>
+            </a>
             <a href="#" onclick="switchTab('nosotros', event)">
                 <i class="fa-solid fa-users"></i>
                 <span class="nav-text">Nosotros</span>
@@ -569,10 +584,14 @@
                 <p id="homeDescription">En LAYER 0 imaginamos espacios honestos, funcionales y sensibles a su contexto. Cada proyecto comienza con una pregunta y termina convirtiéndose en una experiencia.</p>
                 <a href="#proyectos" class="text-link" onclick="switchTab('proyectos', event)"><span id="homeCta">Explorar proyectos</span> <i class="fa-solid fa-arrow-right"></i></a>
             </div>
-            <div class="home-services">
-                <h2 class="home-services-title">Servicios</h2>
-                <div class="services-grid" id="servicesGrid"></div>
+        </section>
+
+        <!-- SERVICIOS -->
+        <section id="servicios">
+            <div class="section-heading">
+                <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Servicios</h1>
             </div>
+            <div class="services-grid" id="servicesGrid"></div>
         </section>
 
         <!-- PROYECTOS -->
