@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAYER 0 | Arquitectura y Construcción</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="supabase-config.js?v=20260821-1"></script>
     <style>
         :root {
             --bg-color: #000000;
@@ -251,8 +252,19 @@
             color: var(--text-muted);
             font-size: .85rem;
             line-height: 1.6;
-            margin-top: .6rem;
+            margin: .6rem 0 0;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height .3s ease, opacity .3s ease;
         }
+
+        .service-item { cursor: pointer; }
+        .service-item:hover p, .service-item:focus-within p, .service-item.is-open p { max-height: 8rem; opacity: 1; }
+        .service-item button { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+        .service-graphic { display: block; color: var(--accent); font-size: 1.2rem; margin-bottom: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .3s ease, margin .3s ease, opacity .3s ease; }
+        .service-item:hover .service-graphic, .service-item:focus-within .service-graphic, .service-item.is-open .service-graphic { max-height: 2rem; margin-bottom: .8rem; opacity: 1; }
+        .section-title-mark { width: 1.7rem; height: 1.7rem; object-fit: cover; vertical-align: middle; margin-right: .7rem; border-radius: 50%; }
 
         .intro h1 {
             color: var(--accent-soft);
@@ -566,7 +578,7 @@
         <!-- PROYECTOS -->
         <section id="proyectos">
             <div class="section-heading">
-                <h1 class="section-title">Proyectos</h1>
+                <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Proyectos</h1>
             </div>
             <div class="projects-grid">
                 <!-- Proyecto 1 -->
@@ -596,7 +608,7 @@
         <!-- NOSOTROS (5 MIEMBROS) -->
         <section id="nosotros">
             <div class="section-heading">
-                <h1 class="section-title">Nosotros</h1>
+                <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Nosotros</h1>
             </div>
             <p class="about-copy">Somos un equipo multidisciplinario que trabaja entre la arquitectura, el diseño y la construcción. Nos interesa crear lugares que envejezcan bien y mejoren la vida cotidiana.</p>
             <div class="team-grid">
@@ -630,7 +642,7 @@
 
         <!-- CONTACTO -->
         <section id="contacto">
-            <h1 class="section-title">Contacto</h1>
+            <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Contacto</h1>
             <p class="contact-note">Cuéntanos sobre tu próximo espacio. Estamos disponibles para conversar sobre proyectos, colaboraciones y nuevas ideas.</p>
             <div class="contact-container" id="contactLinks" aria-label="Medios de contacto"></div>
         </section>
@@ -838,11 +850,11 @@
             if (settings && settings.url && !settings.url.includes('TU-PROYECTO') && window.supabase) {
                 const client = window.supabase.createClient(settings.url, settings.anonKey);
                 const [projectsResult, membersResult, socialResult, contentResult, servicesResult] = await Promise.all([
-                    client.from('projects').select('title, images, image_details, location, description, project_date').order('created_at'),
+                    client.from('projects').select('title, images, image_details, cover_image, location, description, project_date').order('created_at'),
                     client.from('members').select('name, role, profession, description, photo, instagram').order('created_at'),
                     client.from('social_links').select('platform, url'),
                     client.from('site_content').select('content_key, content_value'),
-                    client.from('services').select('title, description').order('created_at')
+                    client.from('services').select('title, description, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: true })
                 ]);
                 const { data: projects } = projectsResult;
                 const { data: members } = membersResult;
@@ -859,7 +871,7 @@
                     }
                 if (projects) {
                     document.querySelector('.projects-grid').replaceChildren();
-                    projects.forEach(project => createProjectCard(project.title, project.images, project.location, project.description, project.project_date, project.image_details));
+                    projects.forEach(project => createProjectCard(project.title, project.images, project.location, project.description, project.project_date, project.image_details, project.cover_image));
                 }
                 if (members) {
                     document.querySelector('.team-grid').replaceChildren();
@@ -911,9 +923,19 @@
         function createServiceCard(title, description = '') {
             const service = document.createElement('article');
             service.className = 'service-item';
+            const serviceButton = document.createElement('button');
+            serviceButton.type = 'button';
+            serviceButton.setAttribute('aria-expanded', 'false');
+            serviceButton.addEventListener('click', () => { const isOpen = service.classList.toggle('is-open'); serviceButton.setAttribute('aria-expanded', String(isOpen)); });
+            const graphic = document.createElement('span');
+            graphic.className = 'service-graphic';
+            const serviceIcon = /obra|constru|ejec/i.test(title) ? 'fa-solid fa-compass-drafting' : /interior|diseño/i.test(title) ? 'fa-solid fa-cube' : /urban|paisaje/i.test(title) ? 'fa-solid fa-chart-area' : 'fa-solid fa-ruler-combined';
+            graphic.innerHTML = `<i class="${serviceIcon}" aria-hidden="true"></i>`;
+            serviceButton.appendChild(graphic);
             const serviceTitle = document.createElement('h3');
             serviceTitle.textContent = title;
-            service.appendChild(serviceTitle);
+            serviceButton.appendChild(serviceTitle);
+            service.appendChild(serviceButton);
             if (description) {
                 const serviceDescription = document.createElement('p');
                 serviceDescription.textContent = description;
@@ -922,7 +944,7 @@
             document.getElementById('servicesGrid').appendChild(service);
         }
 
-        function createProjectCard(name, images, location = '', description = '', projectDate = '', imageDetails = []) {
+        function createProjectCard(name, images, location = '', description = '', projectDate = '', imageDetails = [], coverImage = '') {
             const card = document.createElement('div');
             card.className = 'project-card';
             card.dataset.title = name;
@@ -934,7 +956,7 @@
             card.dataset.date = projectDate || '';
             card.addEventListener('click', () => openProjectGallery(card));
             const image = document.createElement('img');
-            image.src = normalizedImages[0]?.url || '';
+            image.src = normalizedImages.find(item => item.url === coverImage)?.url || normalizedImages[0]?.url || '';
             image.alt = name;
             const overlay = document.createElement('div');
             overlay.className = 'project-overlay';

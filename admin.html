@@ -6,6 +6,7 @@
     <title>Administración | LAYER 0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=50d3829"></script>
     <style>
@@ -16,9 +17,14 @@
         .panel { background: var(--panel); border: 1px solid var(--line); padding: 1.5rem; margin-top: 1.5rem; } form { display: grid; gap: 1rem; } label { color: var(--muted); font-size: .8rem; } input, textarea { display: block; width: 100%; margin-top: .4rem; padding: .85rem; color: var(--text); background: #101313; border: 1px solid var(--line); font: inherit; } textarea { min-height: 100px; resize: vertical; } button { padding: .85rem 1rem; color: #151817; background: var(--accent); border: 0; cursor: pointer; font: 600 .85rem Manrope; } button.secondary { color: var(--text); background: transparent; border: 1px solid var(--line); } button.danger { color: #f5d8d2; background: transparent; border: 1px solid #8b5148; } .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; } .hidden { display: none; } .status { color: var(--muted); min-height: 1.5em; } .records { display: grid; gap: .6rem; margin-top: 1.2rem; } .record { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .8rem; border: 1px solid var(--line); } .record small { display: block; color: var(--muted); margin-top: .25rem; } @media (max-width: 640px) { .row { grid-template-columns: 1fr; } .record { align-items: flex-start; flex-direction: column; } }
         .image-editor { display: grid; gap: 1rem; }
         .image-row { border: 1px solid var(--line); padding: 1rem; display: grid; gap: .8rem; }
+        .image-row-content { display: grid; grid-template-columns: 86px 1fr; gap: 1rem; align-items: start; }
+        .image-preview { width: 86px; height: 64px; object-fit: cover; border: 1px solid var(--line); background: #101313; }
+        .cover-choice { display: flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .75rem; }
+        .service-order { display: inline-flex; gap: .35rem; margin-right: .6rem; }
+        .service-order button { padding: .35rem .55rem; }
         .image-row-header { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font: 500 .75rem 'DM Mono', monospace; text-transform: uppercase; }
         .image-row .row { grid-template-columns: repeat(2, 1fr); }
-        @media (max-width: 640px) { .image-row .row { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .image-row .row { grid-template-columns: 1fr; } .image-row-content { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -87,11 +93,11 @@
     const explainDataError = error => error?.message?.includes('services') ? 'Supabase todavía no tiene la tabla services. Ejecuta supabase-schema.sql en SQL Editor y vuelve a cargar el panel.' : error?.message || 'No se pudo cargar el contenido.';
     const loadRecords = async () => {
         const [projectsResult, membersResult, socialResult, contentResult, servicesResult] = await Promise.all([
-            client.from('projects').select('id, title, images, image_details, location, description, project_date, is_example').order('created_at', { ascending: false }),
+            client.from('projects').select('id, title, images, image_details, cover_image, location, description, project_date, is_example').order('created_at', { ascending: false }),
             client.from('members').select('id, name, role, profession, description, photo, instagram').order('created_at', { ascending: false }),
             client.from('social_links').select('platform, url'),
             client.from('site_content').select('content_key, content_value'),
-            client.from('services').select('id, title, description').order('created_at', { ascending: false })
+            client.from('services').select('id, title, description, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: true })
         ]);
         if (servicesResult.error) {
             setStatus(explainDataError(servicesResult.error));
@@ -104,7 +110,7 @@
         projectsCache = projects || [];
         membersCache = members || [];
         window.servicesCache = services || [];
-        document.getElementById('serviceRecords').innerHTML = window.servicesCache.map(service => `<div class="record"><span>${escapeHtml(service.title)}<small>${escapeHtml(service.description)}</small></span><span><button type="button" onclick="editService(${service.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('services', ${service.id}, 'Servicio eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay servicios guardados.</small>';
+        document.getElementById('serviceRecords').innerHTML = window.servicesCache.map((service, index) => `<div class="record"><span>${escapeHtml(service.title)}<small>${escapeHtml(service.description)}</small></span><span><span class="service-order"><button class="secondary" type="button" ${index === 0 ? 'disabled' : ''} onclick="moveService(${index}, -1)" aria-label="Subir servicio">↑</button><button class="secondary" type="button" ${index === window.servicesCache.length - 1 ? 'disabled' : ''} onclick="moveService(${index}, 1)" aria-label="Bajar servicio">↓</button></span><button type="button" onclick="editService(${service.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('services', ${service.id}, 'Servicio eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay servicios guardados.</small>';
         document.getElementById('projectRecords').innerHTML = projectsCache.map(project => `<div class="record"><span>${escapeHtml(project.title)}<small>${escapeHtml(project.location)} · ${project.images.length} imagen(es)${project.is_example ? ' · ejemplo' : ''}</small></span><span><button type="button" onclick="editProject(${project.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('projects', ${project.id}, 'Proyecto eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay proyectos guardados.</small>';
         document.getElementById('memberRecords').innerHTML = membersCache.map(member => `<div class="record"><span>${escapeHtml(member.name)}<small>${escapeHtml(member.profession || member.role)}</small></span><span><button type="button" onclick="editMember(${member.id})">Editar</button> <button class="danger" type="button" onclick="deleteRecord('members', ${member.id}, 'Miembro eliminado.')">Eliminar</button></span></div>`).join('') || '<small>No hay miembros guardados.</small>';
         (content || []).forEach(item => { if (contentInputs[item.content_key]) contentInputs[item.content_key].value = item.content_value; });
@@ -119,23 +125,29 @@
     const addImageRow = (detail = {}) => {
         const row = document.createElement('div');
         row.className = 'image-row';
-        row.innerHTML = `<div class="image-row-header"><span>Imagen</span><button class="danger" type="button">Eliminar imagen</button></div><label>URL<input class="image-url" type="url" placeholder="https://..." required></label><label>Título<input class="image-title" placeholder="Vista exterior, detalle..." /></label><label>Descripción<textarea class="image-description" placeholder="Descripción de esta imagen"></textarea></label><div class="row"><label>Autor<input class="image-author" placeholder="Opcional"></label><label>Lugar<input class="image-location" placeholder="Opcional"></label></div><label>Fecha<input class="image-date" placeholder="Opcional"></label>`;
+        row.innerHTML = `<div class="image-row-header"><span>Imagen</span><button class="danger" type="button">Eliminar imagen</button></div><div class="image-row-content"><img class="image-preview" alt="Vista previa de la imagen"><div><label>URL<input class="image-url" type="url" placeholder="https://..." required></label><label class="cover-choice"><input class="image-cover" type="radio" name="coverImage"> Usar como portada pública</label></div></div><label>Título<input class="image-title" placeholder="Vista exterior, detalle..." /></label><label>Descripción<textarea class="image-description" placeholder="Descripción de esta imagen"></textarea></label><div class="row"><label>Autor<input class="image-author" placeholder="Opcional"></label><label>Lugar<input class="image-location" placeholder="Opcional"></label></div><label>Fecha<input class="image-date" placeholder="Opcional"></label>`;
         row.querySelector('.image-url').value = detail.url || '';
         row.querySelector('.image-title').value = detail.title || '';
         row.querySelector('.image-description').value = detail.description || '';
         row.querySelector('.image-author').value = detail.author || '';
         row.querySelector('.image-location').value = detail.location || '';
         row.querySelector('.image-date').value = detail.date || '';
+        row.querySelector('.image-cover').checked = detail.isCover === true;
+        const preview = row.querySelector('.image-preview');
+        const updatePreview = () => { preview.src = row.querySelector('.image-url').value.trim(); row.querySelector('.image-cover').value = row.querySelector('.image-url').value.trim(); };
+        row.querySelector('.image-url').addEventListener('input', updatePreview);
+        updatePreview();
         row.querySelector('button').addEventListener('click', () => row.remove());
         imageEditor.appendChild(row);
     };
-    const readImageDetails = () => [...imageEditor.querySelectorAll('.image-row')].map(row => ({ url: row.querySelector('.image-url').value.trim(), title: row.querySelector('.image-title').value.trim(), description: row.querySelector('.image-description').value.trim(), author: row.querySelector('.image-author').value.trim(), location: row.querySelector('.image-location').value.trim(), date: row.querySelector('.image-date').value.trim() })).filter(image => image.url);
+    const readImageDetails = () => [...imageEditor.querySelectorAll('.image-row')].map(row => ({ url: row.querySelector('.image-url').value.trim(), title: row.querySelector('.image-title').value.trim(), description: row.querySelector('.image-description').value.trim(), author: row.querySelector('.image-author').value.trim(), location: row.querySelector('.image-location').value.trim(), date: row.querySelector('.image-date').value.trim(), isCover: row.querySelector('.image-cover').checked })).filter(image => image.url);
     const resetProjectForm = () => { document.getElementById('projectForm').reset(); projectIdInput.value = ''; imageEditor.replaceChildren(); addImageRow(); projectFormTitle.textContent = 'Nuevo proyecto'; projectSubmit.textContent = 'Guardar proyecto'; cancelProjectEdit.classList.add('hidden'); };
     const resetMemberForm = () => { document.getElementById('memberForm').reset(); memberIdInput.value = ''; memberFormTitle.textContent = 'Nuevo miembro'; memberSubmit.textContent = 'Guardar miembro'; cancelMemberEdit.classList.add('hidden'); };
     const resetServiceForm = () => { document.getElementById('serviceForm').reset(); serviceIdInput.value = ''; serviceFormTitle.textContent = 'Nuevo servicio'; serviceSubmit.textContent = 'Guardar servicio'; cancelServiceEdit.classList.add('hidden'); };
-    window.editProject = id => { const project = projectsCache.find(item => item.id === id); if (!project) return; projectIdInput.value = project.id; projectTitleInput.value = project.title; projectLocationInput.value = project.location || ''; projectDescriptionInput.value = project.description || ''; projectDateInput.value = project.project_date ? project.project_date.slice(0, 7) : ''; imageEditor.replaceChildren(); const details = Array.isArray(project.image_details) && project.image_details.length ? project.image_details : project.images.map(url => ({ url })); details.forEach(addImageRow); projectFormTitle.textContent = 'Editar proyecto'; projectSubmit.textContent = 'Actualizar proyecto'; cancelProjectEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    window.editProject = id => { const project = projectsCache.find(item => item.id === id); if (!project) return; projectIdInput.value = project.id; projectTitleInput.value = project.title; projectLocationInput.value = project.location || ''; projectDescriptionInput.value = project.description || ''; projectDateInput.value = project.project_date ? project.project_date.slice(0, 7) : ''; imageEditor.replaceChildren(); const details = Array.isArray(project.image_details) && project.image_details.length ? project.image_details : project.images.map(url => ({ url })); details.forEach((detail, index) => addImageRow({ ...detail, isCover: project.cover_image ? detail.url === project.cover_image : index === 0 })); projectFormTitle.textContent = 'Editar proyecto'; projectSubmit.textContent = 'Actualizar proyecto'; cancelProjectEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     window.editMember = id => { const member = membersCache.find(item => item.id === id); if (!member) return; memberIdInput.value = member.id; memberNameInput.value = member.name; memberRoleInput.value = member.role; memberProfessionInput.value = member.profession || ''; memberDescriptionInput.value = member.description || ''; memberPhotoInput.value = member.photo || ''; memberInstagramInput.value = member.instagram || ''; memberFormTitle.textContent = 'Editar miembro'; memberSubmit.textContent = 'Actualizar miembro'; cancelMemberEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     window.editService = id => { const service = (window.servicesCache || []).find(item => item.id === id); if (!service) return; serviceIdInput.value = service.id; serviceTitleInput.value = service.title; serviceDescriptionInput.value = service.description || ''; serviceFormTitle.textContent = 'Editar servicio'; serviceSubmit.textContent = 'Actualizar servicio'; cancelServiceEdit.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    window.moveService = async (index, direction) => { const services = window.servicesCache || []; const targetIndex = index + direction; if (!services[targetIndex]) return; [services[index], services[targetIndex]] = [services[targetIndex], services[index]]; const updates = services.map((service, order) => ({ id: service.id, sort_order: order })); const { error } = await client.from('services').upsert(updates, { onConflict: 'id' }); setStatus(error ? explainDataError(error) : 'Orden de servicios actualizado.'); loadRecords(); };
     const addWhatsappField = (platform, value = '') => { const label = document.createElement('label'); label.textContent = `WhatsApp ${platform.split('_')[1] || ''}`; const input = document.createElement('input'); input.type = 'url'; input.id = `${platform}Url`; input.placeholder = 'https://wa.me/521...'; input.value = value; const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'secondary'; remove.textContent = 'Quitar número'; remove.addEventListener('click', () => label.remove()); label.append(input, remove); document.getElementById('whatsappFields').appendChild(label); };
     document.getElementById('addWhatsapp').addEventListener('click', () => addWhatsappField(`whatsapp_${document.querySelectorAll('#whatsappFields input').length + 1}`));
     window.deleteRecord = async (table, id, message) => { if (!confirm('¿Eliminar este elemento?')) return; const { error } = await client.from(table).delete().eq('id', id); setStatus(error ? error.message : message); if (!error) loadRecords(); };
@@ -156,8 +168,8 @@
         showDashboard(); loadRecords(); setStatus('Sesión iniciada.');
     });
     document.getElementById('projectForm').addEventListener('submit', async event => {
-        event.preventDefault(); const imageDetails = readImageDetails(); const images = imageDetails.map(image => image.url);
-        const project = { title: projectTitleInput.value, images, image_details: imageDetails, location: projectLocationInput.value, description: projectDescriptionInput.value, project_date: projectDateInput.value ? `${projectDateInput.value}-01` : null };
+        event.preventDefault(); const imageDetails = readImageDetails(); const images = imageDetails.map(image => image.url); const coverImage = imageDetails.find(image => image.isCover)?.url || images[0] || '';
+        const project = { title: projectTitleInput.value, images, image_details: imageDetails, cover_image: coverImage, location: projectLocationInput.value, description: projectDescriptionInput.value, project_date: projectDateInput.value ? `${projectDateInput.value}-01` : null };
         const query = projectIdInput.value ? client.from('projects').update(project).eq('id', projectIdInput.value) : client.from('projects').insert(project);
         const { error } = await query;
         setStatus(error ? error.message : projectIdInput.value ? 'Proyecto actualizado correctamente.' : 'Proyecto guardado correctamente.'); if (!error) { resetProjectForm(); loadRecords(); }
