@@ -234,14 +234,22 @@
 
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
+            grid-template-columns: minmax(0, 760px);
+            gap: .9rem;
+            justify-content: center;
         }
 
         .service-item {
+            position: relative;
+            isolation: isolate;
             border-top: 1px solid var(--border-color);
-            padding: 1.2rem .8rem;
+            padding: 1.25rem 1.4rem;
+            text-align: left;
+            transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
         }
+
+        .service-item::after { content: ''; position: absolute; inset: -8px; z-index: 0; background: var(--accent); filter: blur(28px); opacity: 0; transition: opacity .3s ease; }
+        .service-item > * { position: relative; z-index: 1; }
 
         .service-item h3 {
             color: var(--text-main);
@@ -262,12 +270,15 @@
         }
 
         .service-item { cursor: pointer; }
-        .service-item:hover, .service-item:focus-within, .service-item.is-open { border-color: var(--accent); box-shadow: 0 0 16px rgba(213, 173, 112, .22); }
+        .service-item:hover, .service-item:focus-within, .service-item.is-open { border-color: var(--accent); box-shadow: 0 0 16px rgba(213, 173, 112, .22); transform: translateX(3px); }
+        .service-item:hover::after, .service-item:focus-within::after, .service-item.is-open::after { opacity: .26; }
         .service-item:hover p, .service-item:focus-within p, .service-item.is-open p { max-height: 8rem; opacity: 1; }
         .service-item button { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
         .service-graphic { display: block; color: var(--accent); font-size: 1.2rem; margin-bottom: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .3s ease, margin .3s ease, opacity .3s ease; }
         .service-item:hover .service-graphic, .service-item:focus-within .service-graphic, .service-item.is-open .service-graphic { max-height: 2rem; margin-bottom: .8rem; opacity: 1; }
-        .section-title-mark { width: 3.4rem; height: 3.4rem; object-fit: cover; vertical-align: middle; margin: -.7rem .7rem -.7rem 0; border-radius: 50%; filter: invert(1) grayscale(1) contrast(1.4); mix-blend-mode: screen; }
+        .section-title-mark { display: none; }
+        .section-title-brand { color: var(--accent); font: 500 .78rem 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; }
+        .section-title-brand strong { color: var(--text-main); font-weight: 500; }
 
         .intro h1 {
             color: var(--accent-soft);
@@ -589,7 +600,7 @@
         <!-- SERVICIOS -->
         <section id="servicios">
             <div class="section-heading">
-                <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Servicios</h1>
+                <h1 class="section-title"><span class="section-title-brand">Layer 0 | <strong>Servicios</strong></span></h1>
             </div>
             <div class="services-grid" id="servicesGrid"></div>
         </section>
@@ -597,7 +608,7 @@
         <!-- PROYECTOS -->
         <section id="proyectos">
             <div class="section-heading">
-                <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Proyectos</h1>
+                <h1 class="section-title"><span class="section-title-brand">Layer 0 | <strong>Proyectos</strong></span></h1>
             </div>
             <div class="projects-grid">
                 <!-- Proyecto 1 -->
@@ -627,7 +638,7 @@
         <!-- NOSOTROS (5 MIEMBROS) -->
         <section id="nosotros">
             <div class="section-heading">
-                <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Nosotros</h1>
+                <h1 class="section-title"><span class="section-title-brand">Layer 0 | <strong>Nosotros</strong></span></h1>
             </div>
             <p class="about-copy">Somos un equipo multidisciplinario que trabaja entre la arquitectura, el diseño y la construcción. Nos interesa crear lugares que envejezcan bien y mejoren la vida cotidiana.</p>
             <div class="team-grid">
@@ -661,7 +672,7 @@
 
         <!-- CONTACTO -->
         <section id="contacto">
-            <h1 class="section-title"><img class="section-title-mark" src="logo.jpg" alt="">Contacto</h1>
+            <h1 class="section-title"><span class="section-title-brand">Layer 0 | <strong>Contacto</strong></span></h1>
             <p class="contact-note">Cuéntanos sobre tu próximo espacio. Estamos disponibles para conversar sobre proyectos, colaboraciones y nuevas ideas.</p>
             <div class="contact-container" id="contactLinks" aria-label="Medios de contacto"></div>
         </section>
@@ -948,7 +959,7 @@
             serviceButton.addEventListener('click', () => { const isOpen = service.classList.toggle('is-open'); serviceButton.setAttribute('aria-expanded', String(isOpen)); });
             const graphic = document.createElement('span');
             graphic.className = 'service-graphic';
-            const serviceIcon = /obra|constru|ejec/i.test(title) ? 'fa-solid fa-compass-drafting' : /interior|diseño/i.test(title) ? 'fa-solid fa-cube' : /urban|paisaje/i.test(title) ? 'fa-solid fa-chart-area' : 'fa-solid fa-ruler-combined';
+            const serviceIcon = /interior|diseño|decor/i.test(title) ? 'fa-solid fa-couch' : /constru|obra|ejec/i.test(title) ? 'fa-solid fa-helmet-safety' : /urban|paisaje|territor/i.test(title) ? 'fa-solid fa-city' : /gesti|supervis|direc/i.test(title) ? 'fa-solid fa-diagram-project' : /visual|render|3d/i.test(title) ? 'fa-solid fa-cubes' : 'fa-solid fa-compass-drafting';
             graphic.innerHTML = `<i class="${serviceIcon}" aria-hidden="true"></i>`;
             serviceButton.appendChild(graphic);
             const serviceTitle = document.createElement('h3');
