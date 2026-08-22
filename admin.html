@@ -15,9 +15,9 @@
         main { width: min(920px, 100%); margin: auto; padding: 4rem 1.5rem; } .eyebrow { color: var(--accent); font: 500 .75rem 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; }
         h1 { font-size: clamp(2rem, 5vw, 4rem); font-weight: 600; margin: .8rem 0 2rem; } h2 { font-size: 1.1rem; margin: 0 0 1.2rem; }
         .panel { background: var(--panel); border: 1px solid var(--line); padding: 1.5rem; margin-top: 1.5rem; } form { display: grid; gap: 1rem; } label { color: var(--muted); font-size: .8rem; } input, textarea { display: block; width: 100%; margin-top: .4rem; padding: .85rem; color: var(--text); background: #101313; border: 1px solid var(--line); font: inherit; } textarea { min-height: 100px; resize: vertical; } button { padding: .85rem 1rem; color: #151817; background: var(--accent); border: 0; cursor: pointer; font: 600 .85rem Manrope; } button.secondary { color: var(--text); background: transparent; border: 1px solid var(--line); } button.danger { color: #f5d8d2; background: transparent; border: 1px solid #8b5148; } .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; } .hidden { display: none; } .status { color: var(--muted); min-height: 1.5em; } .records { display: grid; gap: .6rem; margin-top: 1.2rem; } .record { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .8rem; border: 1px solid var(--line); } .record small { display: block; color: var(--muted); margin-top: .25rem; } @media (max-width: 640px) { .row { grid-template-columns: 1fr; } .record { align-items: flex-start; flex-direction: column; } }
-        .image-editor { display: grid; gap: 1rem; }
-        .image-row { border: 1px solid var(--line); padding: 1rem; display: grid; gap: .8rem; }
-        .image-row-content { display: grid; grid-template-columns: 86px 1fr; gap: 1rem; align-items: start; }
+        .image-editor { display: grid; gap: .5rem; }
+        .image-row { border: 1px solid var(--line); padding: .6rem; display: grid; grid-template-columns: 86px minmax(0, 1fr) auto; gap: .7rem; align-items: start; }
+        .image-row-content { min-width: 0; }
         .image-preview { width: 86px; height: 64px; object-fit: cover; border: 1px solid var(--line); background: #101313; }
         .cover-choice { display: flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .75rem; }
         .service-order { display: inline-flex; gap: .35rem; margin-right: .6rem; }
@@ -36,7 +36,12 @@
         .image-upload { display: flex; gap: .6rem; align-items: end; }
         .image-upload label { flex: 1; }
         .image-upload button { white-space: nowrap; }
-        @media (max-width: 640px) { .image-row .row { grid-template-columns: 1fr; } .image-row-content { grid-template-columns: 1fr; } }
+        .image-order { display: grid; gap: .3rem; }
+        .image-order button { padding: .3rem .55rem; min-width: 2rem; }
+        .image-details { margin-top: .45rem; }
+        .image-details summary { color: var(--muted); cursor: pointer; font-size: .75rem; }
+        .image-fields { display: grid; gap: .6rem; margin-top: .6rem; }
+        @media (max-width: 640px) { .image-row .row { grid-template-columns: 1fr; } .image-row { grid-template-columns: 64px minmax(0, 1fr) auto; } .image-preview { width: 64px; height: 52px; } .image-upload { display: grid; } }
     </style>
 </head>
 <body>
@@ -169,7 +174,7 @@
     const addImageRow = (detail = {}) => {
         const row = document.createElement('div');
         row.className = 'image-row';
-        row.innerHTML = `<div class="image-row-header"><span>Imagen</span><button class="danger" type="button">Eliminar imagen</button></div><div class="image-row-content"><img class="image-preview" alt="Vista previa de la imagen"><div><div class="image-upload"><label>Archivo<input class="image-file" type="file" accept="image/*"></label><button class="secondary" type="button">Subir imagen</button></div><label>URL<input class="image-url" type="url" placeholder="https://..." required></label><label class="cover-choice"><input class="image-cover" type="radio" name="coverImage"> Usar como portada pública</label></div></div><label>Título<input class="image-title" placeholder="Vista exterior, detalle..." /></label><label>Descripción<textarea class="image-description" placeholder="Descripción de esta imagen"></textarea></label><div class="row"><label>Autor<input class="image-author" placeholder="Opcional"></label><label>Lugar<input class="image-location" placeholder="Opcional"></label></div><label>Fecha<input class="image-date" placeholder="Opcional"></label>`;
+        row.innerHTML = `<img class="image-preview" alt="Vista previa de la imagen"><div class="image-row-content"><div class="image-row-header"><span>Imagen</span><button class="danger" type="button">Eliminar</button></div><details class="image-details"><summary>Mostrar información</summary><div class="image-fields"><div class="image-upload"><label>Archivo<input class="image-file" type="file" accept="image/*"></label><button class="secondary" type="button">Subir imagen</button></div><label>URL<input class="image-url" type="url" placeholder="https://..." required></label><label class="cover-choice"><input class="image-cover" type="radio" name="coverImage"> Usar como portada pública</label><label>Título<input class="image-title" placeholder="Vista exterior, detalle..." /></label><label>Descripción<textarea class="image-description" placeholder="Descripción de esta imagen"></textarea></label><div class="row"><label>Autor<input class="image-author" placeholder="Opcional"></label><label>Lugar<input class="image-location" placeholder="Opcional"></label></div><label>Fecha<input class="image-date" placeholder="Opcional"></label></div></details></div><div class="image-order"><button class="secondary move-image-up" type="button" aria-label="Subir imagen" title="Subir imagen">↑</button><button class="secondary move-image-down" type="button" aria-label="Bajar imagen" title="Bajar imagen">↓</button></div>`;
         row.querySelector('.image-url').value = detail.url || '';
         row.querySelector('.image-title').value = detail.title || '';
         row.querySelector('.image-description').value = detail.description || '';
@@ -182,6 +187,8 @@
         row.querySelector('.image-url').addEventListener('input', updatePreview);
         row.querySelector('.image-file').addEventListener('change', event => uploadProjectImage(event.target.files[0], row));
         row.querySelector('.image-upload button').addEventListener('click', () => uploadProjectImage(row.querySelector('.image-file').files[0], row));
+        row.querySelector('.move-image-up').addEventListener('click', () => { const previous = row.previousElementSibling; if (previous) imageEditor.insertBefore(row, previous); });
+        row.querySelector('.move-image-down').addEventListener('click', () => { const next = row.nextElementSibling; if (next) imageEditor.insertBefore(next, row); });
         updatePreview();
         row.querySelector('button').addEventListener('click', () => row.remove());
         imageEditor.appendChild(row);
