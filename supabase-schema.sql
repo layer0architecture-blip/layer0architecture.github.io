@@ -84,6 +84,19 @@ create table if not exists public.services (
 
 alter table public.services add column if not exists sort_order integer not null default 0;
 
+insert into storage.buckets (id, name, public)
+values ('project-images', 'project-images', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "Public can read project images" on storage.objects;
+drop policy if exists "Authenticated users upload project images" on storage.objects;
+drop policy if exists "Authenticated users update project images" on storage.objects;
+drop policy if exists "Authenticated users delete project images" on storage.objects;
+create policy "Public can read project images" on storage.objects for select using (bucket_id = 'project-images');
+create policy "Authenticated users upload project images" on storage.objects for insert to authenticated with check (bucket_id = 'project-images');
+create policy "Authenticated users update project images" on storage.objects for update to authenticated using (bucket_id = 'project-images') with check (bucket_id = 'project-images');
+create policy "Authenticated users delete project images" on storage.objects for delete to authenticated using (bucket_id = 'project-images');
+
 alter table public.projects enable row level security;
 alter table public.members enable row level security;
 alter table public.social_links enable row level security;
