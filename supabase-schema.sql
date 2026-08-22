@@ -8,6 +8,7 @@ create table if not exists public.projects (
     description text not null default '',
     project_date date,
     is_example boolean not null default false,
+    sort_order integer not null default 0,
     created_at timestamptz not null default now()
 );
 
@@ -17,6 +18,17 @@ alter table public.projects add column if not exists cover_image text not null d
 alter table public.projects add column if not exists description text not null default '';
 alter table public.projects add column if not exists project_date date;
 alter table public.projects add column if not exists is_example boolean not null default false;
+alter table public.projects add column if not exists sort_order integer not null default 0;
+
+with ordered_projects as (
+        select id, row_number() over (order by created_at asc, id asc) - 1 as position
+        from public.projects
+)
+update public.projects
+set sort_order = ordered_projects.position
+from ordered_projects
+where public.projects.id = ordered_projects.id
+    and not exists (select 1 from public.projects where sort_order <> 0);
 
 insert into public.projects (title, images, location, description, project_date, is_example)
 select 'Residencia Horizon', array[

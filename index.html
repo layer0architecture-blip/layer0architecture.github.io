@@ -880,7 +880,7 @@
             if (settings && settings.url && !settings.url.includes('TU-PROYECTO') && window.supabase) {
                 const client = window.supabase.createClient(settings.url, settings.anonKey);
                 const [projectsResult, membersResult, socialResult, contentResult, servicesResult] = await Promise.all([
-                    client.from('projects').select('title, images, image_details, cover_image, location, description, project_date').order('created_at'),
+                    client.from('projects').select('title, images, image_details, cover_image, location, description, project_date, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
                     client.from('members').select('name, role, profession, description, photo, instagram').order('created_at'),
                     client.from('social_links').select('platform, url'),
                     client.from('site_content').select('content_key, content_value'),
