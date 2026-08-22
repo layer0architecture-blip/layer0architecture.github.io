@@ -60,7 +60,7 @@
             <details><summary>Contenido y contacto</summary><div class="menu-options"><button class="secondary" type="button" data-admin-target="social">Contactos</button><button class="secondary" type="button" data-admin-target="content">Texto de inicio</button></div></details>
         </nav>
         <div class="panel admin-section active" data-admin-section="projects"><h2 id="projectFormTitle">Nuevo proyecto</h2><form id="projectForm"><input id="projectId" type="hidden"><label>Nombre<input id="projectTitle" required></label><div class="row"><label>Ubicación<input id="projectLocation" placeholder="Ciudad, país"></label><label>Mes y año<input id="projectDate" type="month"></label></div><label>Descripción<textarea id="projectDescription" placeholder="Concepto, materiales y alcance del proyecto"></textarea></label><div><label>Imágenes del proyecto</label><div class="image-editor" id="imageEditor"></div><button class="secondary" id="addImage" type="button">+ Añadir imagen</button></div><div class="row"><button id="projectSubmit">Guardar proyecto</button><button class="secondary hidden" id="cancelProjectEdit" type="button">Cancelar edición</button></div></form></div>
-        <div class="panel admin-section" data-admin-section="members"><h2 id="memberFormTitle">Nuevo miembro</h2><form id="memberForm"><input id="memberId" type="hidden"><div class="row"><label>Nombre<input id="memberName" required></label><label>Rol<input id="memberRole" required></label></div><label>Profesión<input id="memberProfession" placeholder="Arquitecta, ingeniero, diseñadora..."></label><label>Descripción<textarea id="memberDescription" placeholder="Especialidad, experiencia o presentación"></textarea></label><div class="row"><label>Fotografía (URL)<input id="memberPhoto" type="url" placeholder="https://..."></label><label>Instagram (opcional)<input id="memberInstagram" type="url" placeholder="https://instagram.com/..."></label></div><div class="row"><button id="memberSubmit">Guardar miembro</button><button class="secondary hidden" id="cancelMemberEdit" type="button">Cancelar edición</button></div></form><div class="records" id="memberRecords"></div></div>
+        <div class="panel admin-section" data-admin-section="members"><h2 id="memberFormTitle">Nuevo miembro</h2><form id="memberForm"><input id="memberId" type="hidden"><div class="row"><label>Nombre<input id="memberName" required></label><label>Rol<input id="memberRole" required></label></div><label>Profesión<input id="memberProfession" placeholder="Arquitecta, ingeniero, diseñadora..."></label><label>Descripción<textarea id="memberDescription" placeholder="Especialidad, experiencia o presentación"></textarea></label><div class="row"><div class="image-upload"><label>Foto desde tu computadora<input id="memberPhotoFile" type="file" accept="image/*"></label><button class="secondary" id="uploadMemberPhoto" type="button">Subir foto</button></div><label>Fotografía (URL)<input id="memberPhoto" type="url" placeholder="https://..."></label></div><label>Instagram (opcional)<input id="memberInstagram" type="url" placeholder="https://instagram.com/..."></label><div class="row"><button id="memberSubmit">Guardar miembro</button><button class="secondary hidden" id="cancelMemberEdit" type="button">Cancelar edición</button></div></form><div class="records" id="memberRecords"></div></div>
         <div class="panel admin-section" data-admin-section="social"><h2>Contactos</h2><form id="socialForm"><div class="row"><label>Instagram<input id="instagramUrl" type="url" placeholder="https://instagram.com/..."></label><label>Facebook<input id="facebookUrl" type="url" placeholder="https://facebook.com/..."></label></div><div class="row"><label>TikTok<input id="tiktokUrl" type="url" placeholder="https://tiktok.com/@..."></label><label>Correo<input id="emailUrl" type="email" placeholder="correo@ejemplo.com"></label></div><div id="whatsappFields"></div><button class="secondary" id="addWhatsapp" type="button">+ Añadir WhatsApp</button><button>Guardar contactos</button></form></div>
         <div class="panel admin-section" data-admin-section="content"><h2>Texto de inicio</h2><form id="contentForm"><label>Áreas superiores<input id="homeEyebrowInput" required></label><label>Título principal<input id="homeTitleInput" required></label><label>Texto descriptivo<textarea id="homeDescriptionInput" required></textarea></label><label>Texto del enlace<input id="homeCtaInput" required></label><button>Guardar texto de inicio</button></form></div>
         <div class="panel admin-section" data-admin-section="services"><h2 id="serviceFormTitle">Nuevo servicio</h2><form id="serviceForm"><input id="serviceId" type="hidden"><label>Nombre del servicio<input id="serviceTitle" required></label><label>Descripción<textarea id="serviceDescription" placeholder="Describe brevemente este servicio"></textarea></label><div class="row"><button id="serviceSubmit">Guardar servicio</button><button class="secondary hidden" id="cancelServiceEdit" type="button">Cancelar edición</button></div></form><div class="records" id="serviceRecords"></div></div>
@@ -88,6 +88,8 @@
     const memberRoleInput = document.getElementById('memberRole');
     const memberDescriptionInput = document.getElementById('memberDescription');
     const memberPhotoInput = document.getElementById('memberPhoto');
+    const memberPhotoFileInput = document.getElementById('memberPhotoFile');
+    const uploadMemberPhotoButton = document.getElementById('uploadMemberPhoto');
     const memberInstagramInput = document.getElementById('memberInstagram');
     const memberProfessionInput = document.getElementById('memberProfession');
     const memberIdInput = document.getElementById('memberId');
@@ -171,6 +173,29 @@
         uploadButton.textContent = 'Subir imagen';
         setStatus('Imagen subida correctamente.');
     };
+    const uploadMemberPhoto = async () => {
+        const file = memberPhotoFileInput.files[0];
+        if (!file) return setStatus('Selecciona una foto del miembro.');
+        if (!file.type.startsWith('image/')) return setStatus('Selecciona un archivo de imagen.');
+        const { data: { user } } = await client.auth.getUser();
+        if (!user) return setStatus('Tu sesión expiró. Vuelve a iniciar sesión.');
+        const extension = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+        uploadMemberPhotoButton.disabled = true;
+        uploadMemberPhotoButton.textContent = 'Subiendo...';
+        setStatus('Subiendo foto...');
+        const { error } = await client.storage.from('member-photos').upload(path, file, { upsert: false, contentType: file.type });
+        if (error) {
+            uploadMemberPhotoButton.disabled = false;
+            uploadMemberPhotoButton.textContent = 'Subir foto';
+            return setStatus(`No se pudo subir la foto: ${error.message}`);
+        }
+        const { data } = client.storage.from('member-photos').getPublicUrl(path);
+        memberPhotoInput.value = data.publicUrl;
+        uploadMemberPhotoButton.disabled = false;
+        uploadMemberPhotoButton.textContent = 'Subir foto';
+        setStatus('Foto subida correctamente.');
+    };
     const addImageRow = (detail = {}) => {
         const row = document.createElement('div');
         row.className = 'image-row';
@@ -205,6 +230,8 @@
     window.moveProject = async (index, direction) => { if (projectOrderBusy) return; const projects = [...projectsCache]; const targetIndex = index + direction; if (!projects[targetIndex]) return; projectOrderBusy = true; setStatus('Guardando orden de proyectos...'); [projects[index], projects[targetIndex]] = [projects[targetIndex], projects[index]]; const updates = projects.map((project, order) => client.from('projects').update({ sort_order: order }).eq('id', project.id)); const results = await Promise.all(updates); const error = results.find(result => result.error)?.error; projectOrderBusy = false; if (error) { setStatus(explainDataError(error)); return; } setStatus('Orden de proyectos actualizado.'); await loadRecords(); };
     const addWhatsappField = (platform, value = '') => { const label = document.createElement('label'); label.textContent = `WhatsApp ${platform.split('_')[1] || ''}`; const input = document.createElement('input'); input.type = 'url'; input.id = `${platform}Url`; input.placeholder = 'https://wa.me/521...'; input.value = value; const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'secondary'; remove.textContent = 'Quitar número'; remove.addEventListener('click', () => label.remove()); label.append(input, remove); document.getElementById('whatsappFields').appendChild(label); };
     document.getElementById('addWhatsapp').addEventListener('click', () => addWhatsappField(`whatsapp_${document.querySelectorAll('#whatsappFields input').length + 1}`));
+    uploadMemberPhotoButton.addEventListener('click', uploadMemberPhoto);
+    memberPhotoFileInput.addEventListener('change', uploadMemberPhoto);
     window.deleteRecord = async (table, id, message) => { if (!confirm('¿Eliminar este elemento?')) return; const { error } = await client.from(table).delete().eq('id', id); setStatus(error ? error.message : message); if (!error) loadRecords(); };
     const explainAuthError = error => {
         if (error.message.includes('Invalid login credentials')) return 'Correo o contraseña incorrectos. Verifica que el usuario exista en Supabase > Authentication > Users.';

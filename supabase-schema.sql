@@ -30,25 +30,25 @@ from ordered_projects
 where public.projects.id = ordered_projects.id
     and not exists (select 1 from public.projects where sort_order <> 0);
 
-insert into public.projects (title, images, location, description, project_date, is_example)
+insert into public.projects (title, images, location, description, project_date, is_example, sort_order)
 select 'Residencia Horizon', array[
     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85',
     'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85'
-], 'Ciudad de México', 'Residencia de escala doméstica que integra luz natural y materiales honestos.', '2026-01-01', true
+], 'Ciudad de México', 'Residencia de escala doméstica que integra luz natural y materiales honestos.', '2026-01-01', true, 0
 where not exists (select 1 from public.projects where title = 'Residencia Horizon' and is_example = true);
 
-insert into public.projects (title, images, location, description, project_date, is_example)
+insert into public.projects (title, images, location, description, project_date, is_example, sort_order)
 select 'Pabellón Monolito', array[
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85',
     'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=85'
-], 'Monterrey, México', 'Un espacio de encuentro definido por la masa, la sombra y la continuidad material.', '2025-08-01', true
+], 'Monterrey, México', 'Un espacio de encuentro definido por la masa, la sombra y la continuidad material.', '2025-08-01', true, 1
 where not exists (select 1 from public.projects where title = 'Pabellón Monolito' and is_example = true);
 
-insert into public.projects (title, images, location, description, project_date, is_example)
+insert into public.projects (title, images, location, description, project_date, is_example, sort_order)
 select 'Torre Eje', array[
     'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85',
     'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=85'
-], 'Guadalajara, México', 'Una exploración vertical de proporción, estructura y relación con el paisaje urbano.', '2024-03-01', true
+], 'Guadalajara, México', 'Una exploración vertical de proporción, estructura y relación con el paisaje urbano.', '2024-03-01', true, 2
 where not exists (select 1 from public.projects where title = 'Torre Eje' and is_example = true);
 
 update public.projects
@@ -108,6 +108,19 @@ create policy "Public can read project images" on storage.objects for select usi
 create policy "Authenticated users upload project images" on storage.objects for insert to authenticated with check (bucket_id = 'project-images');
 create policy "Authenticated users update project images" on storage.objects for update to authenticated using (bucket_id = 'project-images') with check (bucket_id = 'project-images');
 create policy "Authenticated users delete project images" on storage.objects for delete to authenticated using (bucket_id = 'project-images');
+
+insert into storage.buckets (id, name, public)
+values ('member-photos', 'member-photos', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "Public can read member photos" on storage.objects;
+drop policy if exists "Authenticated users upload member photos" on storage.objects;
+drop policy if exists "Authenticated users update member photos" on storage.objects;
+drop policy if exists "Authenticated users delete member photos" on storage.objects;
+create policy "Public can read member photos" on storage.objects for select using (bucket_id = 'member-photos');
+create policy "Authenticated users upload member photos" on storage.objects for insert to authenticated with check (bucket_id = 'member-photos');
+create policy "Authenticated users update member photos" on storage.objects for update to authenticated using (bucket_id = 'member-photos') with check (bucket_id = 'member-photos');
+create policy "Authenticated users delete member photos" on storage.objects for delete to authenticated using (bucket_id = 'member-photos');
 
 alter table public.projects enable row level security;
 alter table public.members enable row level security;
