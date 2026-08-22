@@ -41,6 +41,14 @@
         .image-details { margin-top: .45rem; }
         .image-details summary { color: var(--muted); cursor: pointer; font-size: .75rem; }
         .image-fields { display: grid; gap: .6rem; margin-top: .6rem; }
+        .crop-dialog { width: min(440px, calc(100% - 2rem)); padding: 1.2rem; color: var(--text); background: var(--panel); border: 1px solid var(--line); }
+        .crop-dialog::backdrop { background: rgba(0, 0, 0, .78); }
+        .crop-dialog h2 { margin-bottom: .8rem; }
+        .crop-canvas-wrap { display: grid; place-items: center; background: #0b0d0c; padding: .6rem; }
+        #cropCanvas { display: block; width: min(100%, 360px); aspect-ratio: 4 / 3; height: auto; }
+        .crop-controls { display: grid; gap: .65rem; margin: 1rem 0; }
+        .crop-controls label { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: .7rem; }
+        .crop-actions { display: flex; justify-content: flex-end; gap: .6rem; }
         @media (max-width: 640px) { .image-row .row { grid-template-columns: 1fr; } .image-row { grid-template-columns: 64px minmax(0, 1fr) auto; } .image-preview { width: 64px; height: 52px; } .image-upload { display: grid; } }
     </style>
 </head>
@@ -69,6 +77,16 @@
     </section>
     <p class="status" id="status"></p>
 </main>
+<dialog class="crop-dialog" id="cropDialog">
+    <h2>Ajustar imagen</h2>
+    <div class="crop-canvas-wrap"><canvas id="cropCanvas" width="1200" height="900"></canvas></div>
+    <div class="crop-controls">
+        <label>Zoom<input id="cropZoom" type="range" min="1" max="3" step="0.05" value="1"></label>
+        <label>Horizontal<input id="cropX" type="range" min="-100" max="100" value="0"></label>
+        <label>Vertical<input id="cropY" type="range" min="-100" max="100" value="0"></label>
+    </div>
+    <div class="crop-actions"><button class="secondary" id="cancelCrop" type="button">Cancelar</button><button id="applyCrop" type="button">Usar este encuadre</button></div>
+</dialog>
 <script>
     const settings = window.SUPABASE_CONFIG;
     const loginPanel = document.getElementById('loginPanel');
@@ -153,7 +171,7 @@
         if (!file.type.startsWith('image/')) return setStatus('Selecciona un archivo de imagen.');
         const { data: { user } } = await client.auth.getUser();
         if (!user) return setStatus('Tu sesión expiró. Vuelve a iniciar sesión.');
-        const extension = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const extension = (file.name || '').split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || file.type.split('/')[1] || 'jpg';
         const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
         const uploadButton = row.querySelector('.image-upload button');
         const urlInput = row.querySelector('.image-url');
@@ -173,13 +191,12 @@
         uploadButton.textContent = 'Subir imagen';
         setStatus('Imagen subida correctamente.');
     };
-    const uploadMemberPhoto = async () => {
-        const file = memberPhotoFileInput.files[0];
+    const uploadMemberPhoto = async file => {
         if (!file) return setStatus('Selecciona una foto del miembro.');
         if (!file.type.startsWith('image/')) return setStatus('Selecciona un archivo de imagen.');
         const { data: { user } } = await client.auth.getUser();
         if (!user) return setStatus('Tu sesión expiró. Vuelve a iniciar sesión.');
-        const extension = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const extension = (file.name || '').split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || file.type.split('/')[1] || 'jpg';
         const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
         uploadMemberPhotoButton.disabled = true;
         uploadMemberPhotoButton.textContent = 'Subiendo...';
@@ -196,6 +213,47 @@
         uploadMemberPhotoButton.textContent = 'Subir foto';
         setStatus('Foto subida correctamente.');
     };
+    const cropDialog = document.getElementById('cropDialog');
+    const cropCanvas = document.getElementById('cropCanvas');
+    const cropContext = cropCanvas.getContext('2d');
+    const cropImage = new Image();
+    const cropControls = { zoom: document.getElementById('cropZoom'), x: document.getElementById('cropX'), y: document.getElementById('cropY') };
+    let cropObjectUrl = '';
+    let cropCompletion = null;
+    const drawCropPreview = () => {
+        const viewportWidth = cropCanvas.width;
+        const viewportHeight = cropCanvas.height;
+        const scale = Math.max(viewportWidth / cropImage.naturalWidth, viewportHeight / cropImage.naturalHeight) * Number(cropControls.zoom.value);
+        const scaledWidth = cropImage.naturalWidth * scale;
+        const scaledHeight = cropImage.naturalHeight * scale;
+        const overflowX = Math.max(0, scaledWidth - viewportWidth) / 2;
+        const overflowY = Math.max(0, scaledHeight - viewportHeight) / 2;
+        const offsetX = (viewportWidth - scaledWidth) / 2 - Number(cropControls.x.value) / 100 * overflowX;
+        const offsetY = (viewportHeight - scaledHeight) / 2 - Number(cropControls.y.value) / 100 * overflowY;
+        cropContext.clearRect(0, 0, viewportWidth, viewportHeight);
+        cropContext.fillStyle = '#0b0d0c';
+        cropContext.fillRect(0, 0, viewportWidth, viewportHeight);
+        cropContext.drawImage(cropImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    };
+    const finishCrop = result => {
+        cropDialog.close();
+        if (cropObjectUrl) URL.revokeObjectURL(cropObjectUrl);
+        cropObjectUrl = '';
+        const completion = cropCompletion;
+        cropCompletion = null;
+        if (completion) completion(result);
+    };
+    const openCropEditor = (file, completion) => {
+        if (!file) return;
+        cropCompletion = completion;
+        cropObjectUrl = URL.createObjectURL(file);
+        cropImage.onload = () => { cropControls.zoom.value = '1'; cropControls.x.value = '0'; cropControls.y.value = '0'; drawCropPreview(); cropDialog.showModal(); };
+        cropImage.src = cropObjectUrl;
+    };
+    [cropControls.zoom, cropControls.x, cropControls.y].forEach(control => control.addEventListener('input', drawCropPreview));
+    document.getElementById('cancelCrop').addEventListener('click', () => finishCrop(null));
+    cropDialog.addEventListener('cancel', event => { event.preventDefault(); finishCrop(null); });
+    document.getElementById('applyCrop').addEventListener('click', () => cropCanvas.toBlob(blob => finishCrop(blob), 'image/jpeg', .9));
     const addImageRow = (detail = {}) => {
         const row = document.createElement('div');
         row.className = 'image-row';
@@ -210,8 +268,8 @@
         const preview = row.querySelector('.image-preview');
         const updatePreview = () => { preview.src = row.querySelector('.image-url').value.trim(); row.querySelector('.image-cover').value = row.querySelector('.image-url').value.trim(); };
         row.querySelector('.image-url').addEventListener('input', updatePreview);
-        row.querySelector('.image-file').addEventListener('change', event => uploadProjectImage(event.target.files[0], row));
-        row.querySelector('.image-upload button').addEventListener('click', () => uploadProjectImage(row.querySelector('.image-file').files[0], row));
+        row.querySelector('.image-file').addEventListener('change', event => openCropEditor(event.target.files[0], croppedFile => croppedFile && uploadProjectImage(croppedFile, row)));
+        row.querySelector('.image-upload button').addEventListener('click', () => openCropEditor(row.querySelector('.image-file').files[0], croppedFile => croppedFile && uploadProjectImage(croppedFile, row)));
         row.querySelector('.move-image-up').addEventListener('click', () => { const previous = row.previousElementSibling; if (previous) imageEditor.insertBefore(row, previous); });
         row.querySelector('.move-image-down').addEventListener('click', () => { const next = row.nextElementSibling; if (next) imageEditor.insertBefore(next, row); });
         updatePreview();
@@ -230,8 +288,8 @@
     window.moveProject = async (index, direction) => { if (projectOrderBusy) return; const projects = [...projectsCache]; const targetIndex = index + direction; if (!projects[targetIndex]) return; projectOrderBusy = true; setStatus('Guardando orden de proyectos...'); [projects[index], projects[targetIndex]] = [projects[targetIndex], projects[index]]; const updates = projects.map((project, order) => client.from('projects').update({ sort_order: order }).eq('id', project.id)); const results = await Promise.all(updates); const error = results.find(result => result.error)?.error; projectOrderBusy = false; if (error) { setStatus(explainDataError(error)); return; } setStatus('Orden de proyectos actualizado.'); await loadRecords(); };
     const addWhatsappField = (platform, value = '') => { const label = document.createElement('label'); label.textContent = `WhatsApp ${platform.split('_')[1] || ''}`; const input = document.createElement('input'); input.type = 'url'; input.id = `${platform}Url`; input.placeholder = 'https://wa.me/521...'; input.value = value; const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'secondary'; remove.textContent = 'Quitar número'; remove.addEventListener('click', () => label.remove()); label.append(input, remove); document.getElementById('whatsappFields').appendChild(label); };
     document.getElementById('addWhatsapp').addEventListener('click', () => addWhatsappField(`whatsapp_${document.querySelectorAll('#whatsappFields input').length + 1}`));
-    uploadMemberPhotoButton.addEventListener('click', uploadMemberPhoto);
-    memberPhotoFileInput.addEventListener('change', uploadMemberPhoto);
+    uploadMemberPhotoButton.addEventListener('click', () => openCropEditor(memberPhotoFileInput.files[0], croppedFile => croppedFile && uploadMemberPhoto(croppedFile)));
+    memberPhotoFileInput.addEventListener('change', () => openCropEditor(memberPhotoFileInput.files[0], croppedFile => croppedFile && uploadMemberPhoto(croppedFile)));
     window.deleteRecord = async (table, id, message) => { if (!confirm('¿Eliminar este elemento?')) return; const { error } = await client.from(table).delete().eq('id', id); setStatus(error ? error.message : message); if (!error) loadRecords(); };
     const explainAuthError = error => {
         if (error.message.includes('Invalid login credentials')) return 'Correo o contraseña incorrectos. Verifica que el usuario exista en Supabase > Authentication > Users.';
