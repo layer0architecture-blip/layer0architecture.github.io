@@ -367,6 +367,7 @@
         .image-viewport { height: min(75vh, 800px); overflow: hidden; display: flex; align-items: center; justify-content: center; background: #101313; }
         .image-viewport img { display: block; width: auto; max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center; transition: transform .12s ease-out; cursor: zoom-in; user-select: none; }
         .image-viewport.is-zoomed img { cursor: zoom-out; }
+        .image-viewport.is-zoomed img { cursor: zoom-out; }
         .image-caption { color: var(--text-muted); line-height: 1.6; margin-top: 1rem; }
         .gallery-details { border-top: 1px solid var(--border-color); margin: 0 0 1.4rem; padding-top: 1.2rem; color: var(--text-muted); line-height: 1.7; }
         .gallery-details strong { color: var(--accent-soft); font-weight: 500; }
@@ -754,6 +755,10 @@
             expandedImage.decoding = 'async';
             expandedImage.loading = 'eager';
             expandedImage.alt = image.title || 'Imagen del proyecto';
+            imageViewport.classList.remove('is-zoomed');
+            expandedImage.style.transform = 'scale(1)';
+            expandedImage.style.transformOrigin = 'center';
+            expandedImage.dataset.zoom = '1';
             document.getElementById('imageCaption').textContent = [image.description, image.author && `Autor: ${image.author}`, image.location && `Lugar: ${image.location}`, image.date && `Fecha: ${image.date}`].filter(Boolean).join(' · ');
             openModal('imageModal');
         }
@@ -768,6 +773,28 @@
             parsed.searchParams.set('dpr', '2');
             return parsed.toString();
         }
+
+        function setImageZoom(nextZoom) {
+            const imageViewport = document.getElementById('imageViewport');
+            const expandedImage = document.getElementById('expandedImage');
+            const zoom = Math.min(4, Math.max(1, nextZoom));
+            expandedImage.dataset.zoom = String(zoom);
+            expandedImage.style.transform = `scale(${zoom})`;
+            imageViewport.classList.toggle('is-zoomed', zoom > 1);
+        }
+
+        document.getElementById('expandedImage').addEventListener('click', event => {
+            const image = event.currentTarget;
+            const viewport = document.getElementById('imageViewport');
+            const bounds = viewport.getBoundingClientRect();
+            image.style.transformOrigin = `${((event.clientX - bounds.left) / bounds.width) * 100}% ${((event.clientY - bounds.top) / bounds.height) * 100}%`;
+            setImageZoom(Number(image.dataset.zoom || 1) > 1 ? 1 : 2);
+        });
+        document.getElementById('imageViewport').addEventListener('wheel', event => {
+            if (!document.getElementById('imageModal').classList.contains('open')) return;
+            event.preventDefault();
+            setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) + (event.deltaY < 0 ? .25 : -.25));
+        }, { passive: false });
 
         function revealGalleryItems() {
             const gallery = document.getElementById('galleryModal');
