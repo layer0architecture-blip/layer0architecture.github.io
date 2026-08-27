@@ -758,6 +758,8 @@
             imageViewport.classList.remove('is-zoomed');
             expandedImage.style.transform = 'scale(1)';
             expandedImage.style.transformOrigin = 'center';
+            expandedImage.style.maxWidth = '100%';
+            expandedImage.style.maxHeight = '100%';
             expandedImage.dataset.zoom = '1';
             document.getElementById('imageCaption').textContent = [image.description, image.author && `Autor: ${image.author}`, image.location && `Lugar: ${image.location}`, image.date && `Fecha: ${image.date}`].filter(Boolean).join(' · ');
             openModal('imageModal');
@@ -779,17 +781,21 @@
             const expandedImage = document.getElementById('expandedImage');
             const zoom = Math.min(4, Math.max(1, nextZoom));
             expandedImage.dataset.zoom = String(zoom);
+            expandedImage.style.maxWidth = zoom > 1 ? 'none' : '100%';
+            expandedImage.style.maxHeight = zoom > 1 ? 'none' : '100%';
             expandedImage.style.transform = `scale(${zoom})`;
             imageViewport.classList.toggle('is-zoomed', zoom > 1);
         }
 
-        document.getElementById('expandedImage').addEventListener('click', event => {
+        const zoomExpandedImage = event => {
             const image = event.currentTarget;
             const viewport = document.getElementById('imageViewport');
             const bounds = viewport.getBoundingClientRect();
             image.style.transformOrigin = `${((event.clientX - bounds.left) / bounds.width) * 100}% ${((event.clientY - bounds.top) / bounds.height) * 100}%`;
             setImageZoom(Number(image.dataset.zoom || 1) > 1 ? 1 : 2);
-        });
+        };
+        document.getElementById('expandedImage').addEventListener('click', zoomExpandedImage);
+        document.getElementById('expandedImage').addEventListener('dblclick', zoomExpandedImage);
         document.getElementById('imageViewport').addEventListener('wheel', event => {
             if (!document.getElementById('imageModal').classList.contains('open')) return;
             event.preventDefault();
