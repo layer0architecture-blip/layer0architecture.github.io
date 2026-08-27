@@ -367,7 +367,6 @@
         .image-viewport { height: min(75vh, 800px); overflow: hidden; display: flex; align-items: center; justify-content: center; background: #101313; }
         .image-viewport img { display: block; width: auto; max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center; transition: transform .12s ease-out; cursor: zoom-in; user-select: none; }
         .image-viewport.is-zoomed img { cursor: zoom-out; }
-        .image-viewport.is-zoomed img { cursor: zoom-out; }
         .image-caption { color: var(--text-muted); line-height: 1.6; margin-top: 1rem; }
         .gallery-details { border-top: 1px solid var(--border-color); margin: 0 0 1.4rem; padding-top: 1.2rem; color: var(--text-muted); line-height: 1.7; }
         .gallery-details strong { color: var(--accent-soft); font-weight: 500; }
@@ -794,8 +793,7 @@
             image.style.transformOrigin = `${((event.clientX - bounds.left) / bounds.width) * 100}% ${((event.clientY - bounds.top) / bounds.height) * 100}%`;
             setImageZoom(Number(image.dataset.zoom || 1) > 1 ? 1 : 2);
         };
-        document.getElementById('expandedImage').addEventListener('click', zoomExpandedImage);
-        document.getElementById('expandedImage').addEventListener('dblclick', zoomExpandedImage);
+        document.getElementById('expandedImage').addEventListener('pointerdown', zoomExpandedImage);
         document.getElementById('imageViewport').addEventListener('pointermove', event => {
             const image = document.getElementById('expandedImage');
             if (Number(image.dataset.zoom || 1) <= 1) return;
