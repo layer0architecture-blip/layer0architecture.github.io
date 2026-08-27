@@ -778,7 +778,7 @@
         function setImageZoom(nextZoom) {
             const imageViewport = document.getElementById('imageViewport');
             const expandedImage = document.getElementById('expandedImage');
-            const zoom = Math.min(4, Math.max(1, nextZoom));
+            const zoom = Math.min(3, Math.max(1, nextZoom));
             expandedImage.dataset.zoom = String(zoom);
             expandedImage.style.maxWidth = zoom > 1 ? 'none' : '100%';
             expandedImage.style.maxHeight = zoom > 1 ? 'none' : '100%';
@@ -791,7 +791,7 @@
             const viewport = document.getElementById('imageViewport');
             const bounds = viewport.getBoundingClientRect();
             image.style.transformOrigin = `${((event.clientX - bounds.left) / bounds.width) * 100}% ${((event.clientY - bounds.top) / bounds.height) * 100}%`;
-            setImageZoom(Number(image.dataset.zoom || 1) > 1 ? 1 : 2);
+            setImageZoom(Number(image.dataset.zoom || 1) > 1 ? 1 : 1.5);
         };
         document.getElementById('expandedImage').addEventListener('pointerdown', zoomExpandedImage);
         document.getElementById('imageViewport').addEventListener('pointermove', event => {
@@ -805,7 +805,7 @@
         document.getElementById('imageViewport').addEventListener('wheel', event => {
             if (!document.getElementById('imageModal').classList.contains('open')) return;
             event.preventDefault();
-            setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) + (event.deltaY < 0 ? .25 : -.25));
+            setImageZoom(Number(document.getElementById('expandedImage').dataset.zoom || 1) + (event.deltaY < 0 ? .15 : -.15));
         }, { passive: false });
 
         function revealGalleryItems() {
