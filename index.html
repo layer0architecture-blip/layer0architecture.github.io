@@ -796,6 +796,14 @@
         };
         document.getElementById('expandedImage').addEventListener('click', zoomExpandedImage);
         document.getElementById('expandedImage').addEventListener('dblclick', zoomExpandedImage);
+        document.getElementById('imageViewport').addEventListener('pointermove', event => {
+            const image = document.getElementById('expandedImage');
+            if (Number(image.dataset.zoom || 1) <= 1) return;
+            const bounds = event.currentTarget.getBoundingClientRect();
+            const originX = ((event.clientX - bounds.left) / bounds.width) * 100;
+            const originY = ((event.clientY - bounds.top) / bounds.height) * 100;
+            image.style.transformOrigin = `${originX}% ${originY}%`;
+        });
         document.getElementById('imageViewport').addEventListener('wheel', event => {
             if (!document.getElementById('imageModal').classList.contains('open')) return;
             event.preventDefault();
