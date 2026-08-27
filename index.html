@@ -357,7 +357,8 @@
         .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         .gallery-item { margin: 0; background: #101313; border: 1px solid var(--border-color); opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
         .gallery-item.is-visible { opacity: 1; transform: translateY(0); }
-        .gallery-item button { display: flex; align-items: center; justify-content: center; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+        .gallery-item button { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; }
+        .gallery-zoom-icon { position: absolute; right: 1rem; bottom: 1rem; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; color: var(--text-main); background: rgba(11, 11, 11, .78); border: 1px solid var(--border-color); pointer-events: none; }
         .gallery-grid img { display: block; width: auto; max-width: 100%; max-height: calc(100vh - 250px); height: auto; object-fit: contain; }
         @media (prefers-reduced-motion: reduce) { .gallery-item { transition: none; transform: none; } }
         .gallery-caption { padding: .8rem 1rem 1rem; color: var(--text-muted); font-size: .8rem; line-height: 1.5; }
@@ -799,11 +800,15 @@
                 figure.className = 'gallery-item';
                 const button = document.createElement('button');
                 button.type = 'button';
+                button.setAttribute('aria-label', `Ver imagen completa de ${card.dataset.title}`);
                 button.addEventListener('click', () => openExpandedImage(image));
                 const imageElement = document.createElement('img');
                 imageElement.src = image.url;
                 imageElement.alt = `${card.dataset.title}, imagen ${index + 1}`;
-                button.appendChild(imageElement);
+                const zoomIcon = document.createElement('span');
+                zoomIcon.className = 'gallery-zoom-icon';
+                zoomIcon.innerHTML = '<i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i>';
+                button.append(imageElement, zoomIcon);
                 figure.appendChild(button);
                 if (image.title || image.description || image.author || image.location || image.date) {
                     const caption = document.createElement('figcaption');
