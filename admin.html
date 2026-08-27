@@ -268,8 +268,8 @@
         const preview = row.querySelector('.image-preview');
         const updatePreview = () => { preview.src = row.querySelector('.image-url').value.trim(); row.querySelector('.image-cover').value = row.querySelector('.image-url').value.trim(); };
         row.querySelector('.image-url').addEventListener('input', updatePreview);
-        row.querySelector('.image-file').addEventListener('change', event => openCropEditor(event.target.files[0], croppedFile => croppedFile && uploadProjectImage(croppedFile, row)));
-        row.querySelector('.image-upload button').addEventListener('click', () => openCropEditor(row.querySelector('.image-file').files[0], croppedFile => croppedFile && uploadProjectImage(croppedFile, row)));
+        row.querySelector('.image-file').addEventListener('change', event => uploadProjectImage(event.target.files[0], row));
+        row.querySelector('.image-upload button').addEventListener('click', () => uploadProjectImage(row.querySelector('.image-file').files[0], row));
         row.querySelector('.move-image-up').addEventListener('click', () => { const previous = row.previousElementSibling; if (previous) imageEditor.insertBefore(row, previous); });
         row.querySelector('.move-image-down').addEventListener('click', () => { const next = row.nextElementSibling; if (next) imageEditor.insertBefore(next, row); });
         updatePreview();
